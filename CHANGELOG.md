@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0] - 2025-10-18
+
+### Features
+
+- enable interactive terminal access for npm publish
+
+
 ## [2.8.2] - 2025-10-18
 
 ### Bug Fixes
