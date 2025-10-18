@@ -534,23 +534,24 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         helpers.setOutput('Publishing to npm registry...')
 
         try {
-          // Use npm with truly non-interactive flags and environment
+          // Use npm publish with terminal access for interactive prompts (OTP, etc.)
+          helpers.setOutput('Publishing to npm... (you may need to interact with prompts)')
+          
           const publishResult = await execa('npm', [
             'publish',
             '--access', 'public',
             '--registry', 'https://registry.npmjs.org/',
             '--no-git-checks'
           ], {
-            stdio: 'pipe',
-            timeout: 30000, // 30 second timeout
+            stdio: 'inherit', // Allow terminal interaction
+            timeout: 120000, // 2 minute timeout for interactive prompts
             env: {
               ...process.env,
               NPM_CONFIG_AUDIT: 'false',
               NPM_CONFIG_FUND: 'false', 
-              NPM_CONFIG_UPDATE_NOTIFIER: 'false',
-              CI: 'true' // Force CI mode to prevent interactive prompts
-            },
-            input: '\n' // Send enter to any potential prompts
+              NPM_CONFIG_UPDATE_NOTIFIER: 'false'
+              // Removed CI=true to allow interactive prompts
+            }
           })
 
           ctx.deployments = {
@@ -569,7 +570,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           const errorMessage = error instanceof Error ? error.message : String(error)
           const errorOutput = error instanceof Error && 'stderr' in error ? error.stderr : ''
           const fullError = `${errorMessage} ${errorOutput}`.toLowerCase()
-          
+
           if (fullError.includes('401') || fullError.includes('not authenticated') || fullError.includes('login')) {
             helpers.setTitle('Publish to npm - ⚠️ Failed: Authentication required')
             helpers.setOutput('❌ Please run: npm login')
