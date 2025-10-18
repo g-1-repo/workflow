@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.12.0] - 2025-10-18
+
+### Features
+
+- integrate with consolidated go-utils package
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.11.2] - 2025-10-18
 
 ### Other Changes
