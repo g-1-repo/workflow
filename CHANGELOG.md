@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0] - 2025-10-18
+
+### Features
+
+- intelligent deployment configuration - auto-detect and configure based on available options
+
+
 ## [2.3.8] - 2025-10-18
 
 
