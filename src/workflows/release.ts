@@ -186,64 +186,13 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         const hasChanges = await git.hasUncommittedChanges()
 
         if (hasChanges && !options.force) {
-          // If not in interactive mode and not forced, offer to auto-handle
-          if (!options.nonInteractive) {
-            const enquirer = await import('enquirer')
-            const { prompt } = enquirer.default || enquirer
+          // Show the actual uncommitted changes
+          const changedFiles = await git.getChangedFiles()
+          const changesList = changedFiles.map(file => `  - ${file}`).join('\n')
 
-            const response = await prompt({
-              type: 'select',
-              name: 'action',
-              message: 'Uncommitted changes detected. How would you like to proceed?',
-              choices: [
-                {
-                  name: 'commit',
-                  message: 'Commit all changes automatically',
-                  value: 'commit',
-                },
-                {
-                  name: 'stash',
-                  message: 'Stash changes and continue release',
-                  value: 'stash',
-                },
-                {
-                  name: 'abort',
-                  message: 'Abort release and handle changes manually',
-                  value: 'abort',
-                },
-              ],
-            } as any) as { action: 'commit' | 'stash' | 'abort' }
+          const errorMessage = `Uncommitted changes detected in:\n${changesList}\n\nPlease choose one of the following options:\n\n1. Commit changes: git add . && git commit -m "your message"\n2. Stash changes: git stash\n3. Skip check: add --force flag\n\nExample: bun run release --force`
 
-            if (response.action === 'abort') {
-              throw new Error('Release aborted by user. Please handle uncommitted changes and try again.')
-            }
-
-            if (response.action === 'commit') {
-              helpers.setOutput('Staging all changes...')
-              await git.stageFiles()
-
-              const commitResponse = await prompt({
-                type: 'input',
-                name: 'message',
-                message: 'Enter commit message:',
-                initial: 'chore: prepare for release',
-              } as any) as { message: string }
-
-              helpers.setOutput('Committing changes...')
-              await git.commit(commitResponse.message)
-              helpers.setOutput('Changes committed successfully')
-            }
-            else if (response.action === 'stash') {
-              helpers.setOutput('Stashing changes...')
-              // Use execa to run git stash instead of accessing private property
-              await execa('git', ['stash', 'push', '-m', 'Auto-stash before release'])
-              helpers.setOutput('Changes stashed successfully')
-            }
-          }
-          else {
-            // In non-interactive mode, just inform and continue
-            helpers.setOutput('⚠️  Uncommitted changes detected but continuing (non-interactive mode)')
-          }
+          throw new Error(errorMessage)
         }
         else if (hasChanges && options.force) {
           helpers.setOutput('⚠️  Uncommitted changes detected but skipped due to --force flag')
@@ -321,7 +270,7 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           helpers.setTitle('Deployment configuration - ✅ Using CLI options')
           return
         }
-        
+
         // In non-interactive mode without explicit flags, skip all deployments by default
         if (options.nonInteractive) {
           options.skipCloudflare = true
