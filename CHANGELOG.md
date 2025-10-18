@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.11.0] - 2025-10-18
+
+### Bug Fixes
+
+- resolve linting issue with unused variable for stable release
+- clean up final syntax issues for stable release
+
+
 ## [2.10.1] - 2025-10-18
 
 ### Bug Fixes
