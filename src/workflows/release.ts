@@ -536,22 +536,24 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         try {
           // Use npm publish with terminal access for interactive prompts (OTP, etc.)
           helpers.setOutput('Publishing to npm... (you may need to interact with prompts)')
-          
+
           const publishResult = await execa('npm', [
             'publish',
-            '--access', 'public',
-            '--registry', 'https://registry.npmjs.org/',
-            '--no-git-checks'
+            '--access',
+            'public',
+            '--registry',
+            'https://registry.npmjs.org/',
+            '--no-git-checks',
           ], {
             stdio: 'inherit', // Allow full terminal interaction
             timeout: 120000, // 2 minute timeout for interactive prompts
             env: {
               ...process.env,
               NPM_CONFIG_AUDIT: 'false',
-              NPM_CONFIG_FUND: 'false', 
-              NPM_CONFIG_UPDATE_NOTIFIER: 'false'
+              NPM_CONFIG_FUND: 'false',
+              NPM_CONFIG_UPDATE_NOTIFIER: 'false',
               // Removed CI=true to allow interactive prompts
-            }
+            },
           })
 
           ctx.deployments = {
