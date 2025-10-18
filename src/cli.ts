@@ -29,6 +29,7 @@ program
   .option('--skip-npm', 'Skip npm publishing')
   .option('--dry-run', 'Show what would be done without executing')
   .option('--verbose', 'Show detailed output')
+  .option('--force', 'Skip uncommitted changes check (use with caution)')
   .action(async (options: ReleaseOptions) => {
     try {
       console.log()

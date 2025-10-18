@@ -149,8 +149,68 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         helpers.setOutput('Checking for uncommitted changes...')
         const hasChanges = await git.hasUncommittedChanges()
 
-        if (hasChanges && !options.interactive) {
-          throw new Error('Uncommitted changes detected. Please commit or stash them first.')
+        if (hasChanges && !options.force) {
+          // If not in interactive mode and not forced, offer to auto-handle
+          if (!options.interactive) {
+            const enquirer = await import('enquirer')
+            const { prompt } = enquirer.default || enquirer
+
+            const response = await prompt({
+              type: 'select',
+              name: 'action',
+              message: 'Uncommitted changes detected. How would you like to proceed?',
+              choices: [
+                {
+                  name: 'commit',
+                  message: 'Commit all changes automatically',
+                  value: 'commit',
+                },
+                {
+                  name: 'stash',
+                  message: 'Stash changes and continue release',
+                  value: 'stash',
+                },
+                {
+                  name: 'abort',
+                  message: 'Abort release and handle changes manually',
+                  value: 'abort',
+                },
+              ],
+            } as any) as { action: 'commit' | 'stash' | 'abort' }
+
+            if (response.action === 'abort') {
+              throw new Error('Release aborted by user. Please handle uncommitted changes and try again.')
+            }
+
+            if (response.action === 'commit') {
+              helpers.setOutput('Staging all changes...')
+              await git.stageFiles()
+
+              const commitResponse = await prompt({
+                type: 'input',
+                name: 'message',
+                message: 'Enter commit message:',
+                initial: 'chore: prepare for release',
+              } as any) as { message: string }
+
+              helpers.setOutput('Committing changes...')
+              await git.commit(commitResponse.message)
+              helpers.setOutput('Changes committed successfully')
+            }
+            else if (response.action === 'stash') {
+              helpers.setOutput('Stashing changes...')
+              // Use execa to run git stash instead of accessing private property
+              await execa('git', ['stash', 'push', '-m', 'Auto-stash before release'])
+              helpers.setOutput('Changes stashed successfully')
+            }
+          }
+          else {
+            // In interactive mode, just inform and continue
+            helpers.setOutput('⚠️  Uncommitted changes detected but continuing in interactive mode')
+          }
+        }
+        else if (hasChanges && options.force) {
+          helpers.setOutput('⚠️  Uncommitted changes detected but skipped due to --force flag')
         }
 
         // Store git info in context

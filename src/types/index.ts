@@ -287,6 +287,7 @@ export interface ReleaseOptions extends CliOptions {
   skipLint?: boolean
   skipCloudflare?: boolean
   skipNpm?: boolean
+  force?: boolean
 }
 
 export interface FeatureOptions extends CliOptions {
