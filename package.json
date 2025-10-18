@@ -75,12 +75,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/go-corp/workflow.git"
+    "url": "git+https://github.com/golive-dev/workflow.git"
   },
   "bugs": {
-    "url": "https://github.com/go-corp/workflow/issues"
+    "url": "https://github.com/golive-dev/workflow/issues"
   },
-  "homepage": "https://github.com/go-corp/workflow#readme",
+  "homepage": "https://github.com/golive-dev/workflow#readme",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
