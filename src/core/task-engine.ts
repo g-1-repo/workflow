@@ -6,7 +6,6 @@ import type { ListrContext, ListrTask } from 'listr2'
 import type {
   TaskEngineOptions,
   WorkflowContext,
-  WorkflowError,
   WorkflowStep,
 } from '../types/index.js'
 import { Listr } from 'listr2'
@@ -39,13 +38,8 @@ export class TaskEngine {
     }
     catch (error) {
       if (error instanceof Error) {
-        const workflowError: WorkflowError = {
-          name: 'WorkflowExecutionError',
-          message: `Workflow failed: ${error.message}`,
-          code: 'WORKFLOW_EXECUTION_ERROR',
-          context,
-        }
-        throw workflowError
+        // Pass through the original error message for better debugging
+        throw new Error(error.message)
       }
       throw error
     }

@@ -89,7 +89,15 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
                 return
               }
 
-              // Try npm fallback
+              // If it's a test failure, extract useful information
+              if (errorOutput.includes('fail') && errorOutput.includes('pass')) {
+                const lines = errorOutput.split('\n')
+                const summary = lines.find(line => line.includes('fail') && line.includes('pass')) || 'Tests failed'
+                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
+                throw new Error(`Test failures detected: ${summary}`)
+              }
+
+              // Try npm fallback for other errors
               try {
                 await execa('npm', ['test'], { stdio: 'pipe' })
                 ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
@@ -106,6 +114,12 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
                 }
 
                 ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
+                // Extract useful test failure info
+                if (npmErrorOutput.includes('fail') && npmErrorOutput.includes('pass')) {
+                  const lines = npmErrorOutput.split('\n')
+                  const summary = lines.find(line => line.includes('fail') && line.includes('pass')) || 'Tests failed'
+                  throw new Error(`Test failures detected: ${summary}`)
+                }
                 throw new Error(`Tests failed: ${npmErrorOutput}`)
               }
             }
