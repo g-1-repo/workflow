@@ -39,7 +39,7 @@ export async function quickRelease(options: import('./types/index.js').ReleaseOp
   const { createTaskEngine } = await import('./core/task-engine.js')
   const { createReleaseWorkflow } = await import('./workflows/release.js')
 
-  const steps = createReleaseWorkflow(options)
+  const steps = await createReleaseWorkflow(options)
   const engine = createTaskEngine({
     showTimer: true,
   })

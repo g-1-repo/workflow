@@ -41,8 +41,8 @@ program
         console.log(chalk.yellow('🔍 DRY RUN MODE - No changes will be made\n'))
       }
 
-      // Create workflow steps
-      const steps = createReleaseWorkflow(options)
+      // Create workflow steps (now async for interactive prompts)
+      const steps = await createReleaseWorkflow(options)
 
       // Create task engine with listr2
       const taskEngine = createTaskEngine({

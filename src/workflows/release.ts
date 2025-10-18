@@ -43,7 +43,46 @@ async function detectNpmSetup(): Promise<boolean> {
   }
 }
 
-export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowStep[] {
+export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
+  // Interactive deployment configuration - ask questions upfront
+  if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
+    console.log('\n🔧 Deployment Configuration')
+    console.log('----------------------------------------')
+    
+    const hasCloudflare = await detectCloudflareSetup()
+    const hasNpmSetup = await detectNpmSetup()
+    
+    if (hasNpmSetup && options.skipNpm === undefined) {
+      const enquirer = await import('enquirer')
+      const response = await enquirer.default.prompt({
+        type: 'confirm',
+        name: 'publishToNpm',
+        message: '📦 Publish to npm registry?',
+        initial: false
+      }) as { publishToNpm: boolean }
+      
+      options.skipNpm = !response.publishToNpm
+    }
+    
+    if (hasCloudflare && options.skipCloudflare === undefined) {
+      const enquirer = await import('enquirer')
+      const response = await enquirer.default.prompt({
+        type: 'confirm',
+        name: 'deployToCloudflare', 
+        message: '🌩️  Deploy to Cloudflare?',
+        initial: false
+      }) as { deployToCloudflare: boolean }
+      
+      options.skipCloudflare = !response.deployToCloudflare
+    }
+    
+    // Set defaults for anything not detected
+    if (options.skipCloudflare === undefined) options.skipCloudflare = true
+    if (options.skipNpm === undefined) options.skipNpm = true
+    
+    console.log('\n')
+  }
+  
   // Set defaults for non-interactive mode
   if (options.nonInteractive && options.skipCloudflare === undefined && options.skipNpm === undefined) {
     options.skipCloudflare = true
@@ -266,93 +305,20 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
       },
     },
 
-    // Interactive Deployment Configuration
+    // Deployment Summary (options were configured at the beginning)
     {
       title: 'Deployment configuration',
-      skip: () => options.nonInteractive === true, // Skip if explicitly non-interactive
       task: async (ctx, helpers) => {
-        // If CLI options are already provided, respect them
-        if (options.skipCloudflare !== undefined || options.skipNpm !== undefined) {
-          helpers.setTitle('Deployment configuration - ✅ Using CLI options')
-          return
-        }
-
-        helpers.setOutput('Detecting available deployment options...')
-
-        const hasCloudflare = await detectCloudflareSetup()
-        const hasNpmSetup = await detectNpmSetup()
-
-        const availableOptions = []
-
-        if (hasCloudflare) {
-          availableOptions.push({
-            name: 'cloudflare',
-            message: '🌩️  Deploy to Cloudflare (wrangler.toml detected)',
-            value: 'cloudflare',
-          })
-        }
-
-        if (hasNpmSetup) {
-          availableOptions.push({
-            name: 'npm',
-            message: '📦 Publish to npm registry',
-            value: 'npm',
-          })
-        }
-
-        if (availableOptions.length === 0) {
-          options.skipCloudflare = true
-          options.skipNpm = true
-          helpers.setTitle('Deployment configuration - ℹ️ No deployment options detected')
-          return
-        }
-
-        // If CLI options are provided, use them
-        if (options.skipCloudflare !== undefined || options.skipNpm !== undefined) {
-          // CLI flags provided, use them as-is
-        }
-        else {
-          // Interactive prompts for available deployment options
-          const enquirer = await import('enquirer')
-          
-          if (hasNpmSetup && options.skipNpm === undefined) {
-            const response = await enquirer.default.prompt({
-              type: 'confirm',
-              name: 'publishToNpm',
-              message: '📦 Publish to npm registry?',
-              initial: false
-            }) as { publishToNpm: boolean }
-            
-            options.skipNpm = !response.publishToNpm
-          } else {
-            options.skipNpm = true
-          }
-          
-          if (hasCloudflare && options.skipCloudflare === undefined) {
-            const response = await enquirer.default.prompt({
-              type: 'confirm', 
-              name: 'deployToCloudflare',
-              message: '🌩️  Deploy to Cloudflare?',
-              initial: false
-            }) as { deployToCloudflare: boolean }
-            
-            options.skipCloudflare = !response.deployToCloudflare
-          } else {
-            options.skipCloudflare = true
-          }
-        }
-
         const enabledTargets = []
-        if (hasCloudflare && !options.skipCloudflare)
-          enabledTargets.push('Cloudflare')
-        if (hasNpmSetup && !options.skipNpm)
-          enabledTargets.push('npm')
-
-        const deploymentSummary = enabledTargets.length > 0
+        
+        if (!options.skipCloudflare) enabledTargets.push('Cloudflare')
+        if (!options.skipNpm) enabledTargets.push('npm')
+        
+        const summary = enabledTargets.length > 0
           ? `Will deploy to: ${enabledTargets.join(', ')}`
           : 'All deployments skipped'
-
-        helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
+          
+        helpers.setTitle(`Deployment configuration - ✅ ${summary}`)
       },
     },
 
