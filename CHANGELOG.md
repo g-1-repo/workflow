@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.2] - 2025-10-18
+
+### Bug Fixes
+
+- make deployments safe by default - skip all unless explicitly enabled via CLI flags
+
+
 ## [2.4.1] - 2025-10-18
 
 
