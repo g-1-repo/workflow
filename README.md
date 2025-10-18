@@ -229,3 +229,4 @@ MIT © [Go Corp](https://github.com/go-corp)
 # Test non-interactive fix
 # Test deployment prompt fix
 # Test successful release
+# Test graceful npm failure

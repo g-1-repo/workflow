@@ -450,7 +450,15 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           helpers.setTitle(`Deploy to Cloudflare - ✅ ${deploymentUrl}`)
         }
         catch (error) {
-          throw new Error(`Cloudflare deployment failed: ${error instanceof Error ? error.message : String(error)}`)
+          // Don't fail the entire workflow if Cloudflare deployment fails
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          if (errorMessage.includes('Missing entry-point')) {
+            helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed: No wrangler config (continuing)')
+          } else if (errorMessage.includes('not authenticated')) {
+            helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed: Not authenticated (continuing)')
+          } else {
+            helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed (continuing)')
+          }
         }
       },
     },
@@ -477,7 +485,15 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           helpers.setTitle(`Publish to npm - ✅ v${ctx.version!.next} published`)
         }
         catch (error) {
-          throw new Error(`npm publishing failed: ${error instanceof Error ? error.message : String(error)}`)
+          // Don't fail the entire workflow if npm publishing fails
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          if (errorMessage.includes('401') || errorMessage.includes('not authenticated')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: Not authenticated (continuing)')
+          } else if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: No permission (continuing)')
+          } else {
+            helpers.setTitle('Publish to npm - ⚠️ Failed (continuing)')
+          }
         }
       },
     },
