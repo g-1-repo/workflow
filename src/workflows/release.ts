@@ -71,14 +71,37 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
           if (result.stdout.trim()) {
             process.stdout.write(`✅ Authenticated as: ${result.stdout.trim()}\n`)
-          }
-          else {
+            
+            // Check if 2FA is required and prompt for OTP upfront
+            process.stdout.write('Checking if 2FA/OTP is required...\n')
+            try {
+              // Try a dry-run publish to see if OTP is needed
+              await execa('npm', ['publish', '--dry-run'], { stdio: 'pipe' })
+              process.stdout.write('✅ No OTP required\n')
+            } catch (dryRunError) {
+              const errorOutput = dryRunError instanceof Error ? dryRunError.message : String(dryRunError)
+              if (errorOutput.includes('one-time pass') || errorOutput.includes('OTP') || errorOutput.includes('two-factor')) {
+                // Prompt for OTP upfront
+                const enquirer = await import('enquirer')
+                const otpResponse = await enquirer.default.prompt({
+                  type: 'input',
+                  name: 'otp',
+                  message: '🔒 Enter your npm One-Time Password (OTP):',
+                  validate: (value: string) => value.length === 6 || 'OTP must be 6 digits'
+                }) as { otp: string }
+                
+                // Store OTP for later use in workflow context
+                if (!options.npmConfig) options.npmConfig = {}
+                options.npmConfig.otp = otpResponse.otp
+                process.stdout.write('✅ OTP captured for publishing\n')
+              }
+            }
+          } else {
             process.stdout.write('❌ Not authenticated to npm\n')
             process.stdout.write('Please run: npm login\n')
             process.exit(1)
           }
-        }
-        catch {
+        } catch {
           process.stdout.write('❌ Not authenticated to npm\n')
           process.stdout.write('Please run: npm login\n')
           process.exit(1)
@@ -525,15 +548,23 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         helpers.setOutput('Publishing to npm registry...')
 
         try {
-          // Use npm with non-interactive flags to prevent hanging
-          const publishResult = await execa('npm', [
+          // Build npm publish command with captured OTP if available
+          const publishArgs = [
             'publish',
             '--access',
             'public',
             '--non-interactive',
             '--no-git-checks',
-            '--verbose',
-          ], {
+            '--verbose'
+          ]
+          
+          // Add OTP if captured during initial configuration
+          if (options.npmConfig?.otp) {
+            publishArgs.push('--otp', options.npmConfig.otp)
+            helpers.setOutput(`Publishing with OTP: ${options.npmConfig.otp}...`)
+          }
+          
+          const publishResult = await execa('npm', publishArgs, {
             stdio: 'pipe',
             timeout: 60000, // 60 second timeout
           })
