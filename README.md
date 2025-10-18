@@ -231,3 +231,4 @@ MIT © [Go Corp](https://github.com/go-corp)
 # Test successful release
 # Test graceful npm failure
 # Test change
+# Final test
