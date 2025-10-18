@@ -33,12 +33,20 @@ program
   .option('--force', 'Skip uncommitted changes check (use with caution)')
   .action(async (options: ReleaseOptions) => {
     try {
+      // Clear screen and show main header
+      process.stdout.write('\x1b[2J\x1b[0f') // Clear screen
       console.log()
-      console.log(chalk.cyan.bold('🚀 Go-Workflow V2 - Enterprise Release Automation'))
-      console.log(chalk.gray(`Version ${version}\n`))
+      console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.cyan('║                   🚀 GO-WORKFLOW V2 - RELEASE AUTOMATION                ║'))
+      console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════════════════╝'))
+      console.log(chalk.gray(`\n                              Version ${version}\n`))
 
       if (options.dryRun) {
-        console.log(chalk.yellow('🔍 DRY RUN MODE - No changes will be made\n'))
+        console.log(chalk.yellow.bold('┌─────────────────────────────────────────────────────────────────────────┐'))
+        console.log(chalk.yellow.bold('│                      🔍 DRY RUN MODE ENABLED                            │'))
+        console.log(chalk.yellow.bold('│                    No changes will be made                             │'))
+        console.log(chalk.yellow.bold('└─────────────────────────────────────────────────────────────────────────┘'))
+        console.log()
       }
 
       // Create workflow steps (now async for interactive prompts)
@@ -55,58 +63,73 @@ program
 
       // Success summary
       console.log()
-      console.log(chalk.green.bold('🎉 Release completed successfully!'))
+      console.log(chalk.green('╔═══════════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.green('║                        🎉 RELEASE COMPLETED SUCCESSFULLY!                     ║'))
+      console.log(chalk.green('╚═══════════════════════════════════════════════════════════════════════════╝'))
+      console.log()
+      
+      console.log(chalk.bold('✨ Release Summary'))
+      console.log(chalk.dim('─'.repeat(50)))
 
       if (context.version) {
-        console.log(chalk.gray(`📦 Version: ${context.version.current} → ${context.version.next}`))
+        console.log(chalk.cyan(`  📦 Version:     ${chalk.white(context.version.current)} → ${chalk.white.bold(context.version.next)}`))
       }
 
       if (context.git) {
-        console.log(chalk.gray(`📂 Repository: ${context.git.repository}`))
+        console.log(chalk.cyan(`  📂 Repository:  ${chalk.white(context.git.repository)}`))
       }
 
       if (context.deployments?.cloudflare) {
-        console.log(chalk.gray('☁️  Cloudflare: Deployed'))
+        console.log(chalk.cyan('  ☁️  Cloudflare:  ' + chalk.green('✓ Deployed')))
       }
 
       if (context.deployments?.npm) {
-        console.log(chalk.gray('📦 npm: Published'))
+        console.log(chalk.cyan('  📦 npm Registry:' + chalk.green(' ✓ Published')))
       }
 
+      console.log(chalk.dim('─'.repeat(50)))
       console.log()
     }
     catch (error) {
       console.log()
-      console.log(chalk.red.bold('❌ Release failed'))
+      console.log(chalk.red('╔═══════════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.red('║                           ❌ RELEASE FAILED                             ║'))
+      console.log(chalk.red('╚═══════════════════════════════════════════════════════════════════════════╝'))
       console.log()
 
       if (error instanceof Error) {
         // Show the detailed error message
-        console.log(chalk.red('🚑 Error Details:'))
+        console.log(chalk.red.bold('🚑 Error Details'))
+        console.log(chalk.red.dim('─'.repeat(30)))
         console.log(chalk.red(`  ${error.message}`))
         console.log()
 
         // Provide helpful suggestions based on error type
         if (error.message.includes('Tests failed')) {
-          console.log(chalk.yellow('💡 Suggestion:'))
+          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow('  • Add test files to your project, or'))
-          console.log(chalk.yellow('  • Skip tests with: bun run release --skip-tests'))
+          console.log(chalk.yellow('  • Skip tests with: ' + chalk.white.bold('bun run release --skip-tests')))
         }
         else if (error.message.includes('Uncommitted changes')) {
-          console.log(chalk.yellow('💡 Suggestion:'))
-          console.log(chalk.yellow('  • Commit your changes with: git add . && git commit -m "your message"'))
-          console.log(chalk.yellow('  • Or stash them with: git stash'))
+          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.dim('─'.repeat(30)))
+          console.log(chalk.yellow('  • Commit your changes with: ' + chalk.white.bold('git add . && git commit -m "your message"')))
+          console.log(chalk.yellow('  • Or stash them with: ' + chalk.white.bold('git stash')))
         }
         else if (error.message.includes('TypeScript errors')) {
-          console.log(chalk.yellow('💡 Suggestion:'))
-          console.log(chalk.yellow('  • Fix TypeScript errors with: bun run typecheck'))
-          console.log(chalk.yellow('  • Or skip type checking with: bun run release --skip-lint'))
+          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.dim('─'.repeat(30)))
+          console.log(chalk.yellow('  • Fix TypeScript errors with: ' + chalk.white.bold('bun run typecheck')))
+          console.log(chalk.yellow('  • Or skip type checking with: ' + chalk.white.bold('bun run release --skip-lint')))
         }
         console.log()
 
         if (options.verbose && error.stack) {
-          console.log(chalk.gray('Stack trace:'))
+          console.log(chalk.gray.bold('Stack Trace'))
+          console.log(chalk.gray.dim('─'.repeat(30)))
           console.log(chalk.gray(error.stack))
+          console.log()
         }
       }
 
