@@ -307,40 +307,49 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           return
         }
 
-        // Safe by default - skip all deployments unless explicitly enabled via CLI flags
-        // Only use what's explicitly set via CLI flags
-        if (options.skipCloudflare === undefined) {
-          options.skipCloudflare = true // Default to skip
+        // If CLI options are provided, use them
+        if (options.skipCloudflare !== undefined || options.skipNpm !== undefined) {
+          // CLI flags provided, use them as-is
+        } else {
+          // Interactive prompts for available deployment options
+          const { prompt } = await import('enquirer')
+          
+          if (hasNpmSetup && options.skipNpm === undefined) {
+            const response = await prompt({
+              type: 'confirm',
+              name: 'publishToNpm',
+              message: '📦 Publish to npm registry?',
+              initial: false
+            }) as { publishToNpm: boolean }
+            
+            options.skipNpm = !response.publishToNpm
+          } else {
+            options.skipNpm = true
+          }
+          
+          if (hasCloudflare && options.skipCloudflare === undefined) {
+            const response = await prompt({
+              type: 'confirm', 
+              name: 'deployToCloudflare',
+              message: '🌩️  Deploy to Cloudflare?',
+              initial: false
+            }) as { deployToCloudflare: boolean }
+            
+            options.skipCloudflare = !response.deployToCloudflare
+          } else {
+            options.skipCloudflare = true
+          }
         }
-        if (options.skipNpm === undefined) {
-          options.skipNpm = true // Default to skip
-        }
-
+        
         const enabledTargets = []
-        const availableTargets = []
-
-        if (hasCloudflare) {
-          availableTargets.push('Cloudflare')
-          if (!options.skipCloudflare)
-            enabledTargets.push('Cloudflare')
-        }
-
-        if (hasNpmSetup) {
-          availableTargets.push('npm')
-          if (!options.skipNpm)
-            enabledTargets.push('npm')
-        }
-
-        if (enabledTargets.length > 0) {
-          const deploymentSummary = `Will deploy to: ${enabledTargets.join(', ')}`
-          helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
-        }
-        else {
-          const suggestion = availableTargets.length > 0
-            ? `Available: ${availableTargets.join(', ')}. Use CLI flags to enable.`
-            : 'No deployment options available.'
-          helpers.setTitle(`Deployment configuration - ⚠️ All deployments skipped. ${suggestion}`)
-        }
+        if (hasCloudflare && !options.skipCloudflare) enabledTargets.push('Cloudflare')
+        if (hasNpmSetup && !options.skipNpm) enabledTargets.push('npm')
+        
+        const deploymentSummary = enabledTargets.length > 0
+          ? `Will deploy to: ${enabledTargets.join(', ')}`
+          : 'All deployments skipped'
+          
+        helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
       },
     },
 
