@@ -44,6 +44,12 @@ async function detectNpmSetup(): Promise<boolean> {
 }
 
 export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowStep[] {
+  // Set defaults for non-interactive mode
+  if (options.nonInteractive && options.skipCloudflare === undefined && options.skipNpm === undefined) {
+    options.skipCloudflare = true
+    options.skipNpm = true
+  }
+  
   return [
     // Quality Gates First
     {
@@ -271,13 +277,6 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           return
         }
 
-        // In non-interactive mode without explicit flags, skip all deployments by default
-        if (options.nonInteractive) {
-          options.skipCloudflare = true
-          options.skipNpm = true
-          helpers.setTitle('Deployment configuration - ℹ️ Non-interactive mode: skipping deployments')
-          return
-        }
 
         helpers.setOutput('Detecting available deployment options...')
 
