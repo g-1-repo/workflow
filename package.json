@@ -1,6 +1,6 @@
 {
   "name": "@go-corp/workflow",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "Enterprise-ready release automation and workflow orchestration",
   "license": "MIT",
   "homepage": "https://github.com/golive-dev/workflow#readme",
