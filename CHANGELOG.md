@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.0] - 2025-10-18
+
+### Features
+
+- add automatic Enter key press for npm publish OTP prompts
+
+
 ## [2.9.0] - 2025-10-18
 
 ### Features
