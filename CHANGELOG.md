@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0] - 2025-10-18
+
+### Features
+
+- add immediate authentication verification after deployment selection
+
+
 ## [2.6.1] - 2025-10-18
 
 
