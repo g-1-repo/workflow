@@ -35,14 +35,14 @@ program
     try {
       console.log()
       console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════════╗'))
-      console.log(chalk.cyan('║                   🚀 GO-WORKFLOW V2 - RELEASE AUTOMATION                ║'))
+      console.log(chalk.cyan('║                  GO-WORKFLOW V2 - RELEASE AUTOMATION                   ║'))
       console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════════════════╝'))
       console.log(chalk.gray(`\n                              Version ${version}\n`))
 
       if (options.dryRun) {
         console.log(chalk.yellow.bold('┌─────────────────────────────────────────────────────────────────────────┐'))
-        console.log(chalk.yellow.bold('│                      🔍 DRY RUN MODE ENABLED                            │'))
-        console.log(chalk.yellow.bold('│                    No changes will be made                             │'))
+        console.log(chalk.yellow.bold('│                     DRY RUN MODE ENABLED                     │'))
+        console.log(chalk.yellow.bold('│                   No changes will be made                   │'))
         console.log(chalk.yellow.bold('└─────────────────────────────────────────────────────────────────────────┘'))
         console.log()
       }
@@ -62,27 +62,27 @@ program
       // Success summary
       console.log()
       console.log(chalk.green('╔═══════════════════════════════════════════════════════════════════════════╗'))
-      console.log(chalk.green('║                        🎉 RELEASE COMPLETED SUCCESSFULLY!                     ║'))
+      console.log(chalk.green('║                   RELEASE COMPLETED SUCCESSFULLY!                   ║'))
       console.log(chalk.green('╚═══════════════════════════════════════════════════════════════════════════╝'))
       console.log()
 
-      console.log(chalk.bold('✨ Release Summary'))
+      console.log(chalk.bold('Release Summary'))
       console.log(chalk.dim('─'.repeat(50)))
 
       if (context.version) {
-        console.log(chalk.cyan(`  📦 Version:     ${chalk.white(context.version.current)} → ${chalk.white.bold(context.version.next)}`))
+        console.log(chalk.cyan(`  Version:     ${chalk.white(context.version.current)} → ${chalk.white.bold(context.version.next)}`))
       }
 
       if (context.git) {
-        console.log(chalk.cyan(`  📂 Repository:  ${chalk.white(context.git.repository)}`))
+        console.log(chalk.cyan(`  Repository:  ${chalk.white(context.git.repository)}`))
       }
 
       if (context.deployments?.cloudflare) {
-        console.log(chalk.cyan(`  ☁️  Cloudflare:  ${chalk.green('✓ Deployed')}`))
+        console.log(chalk.cyan(`  Cloudflare:  ${chalk.green('✓ Deployed')}`))
       }
 
       if (context.deployments?.npm) {
-        console.log(chalk.cyan(`  📦 npm Registry:${chalk.green(' ✓ Published')}`))
+        console.log(chalk.cyan(`  npm Registry:${chalk.green(' ✓ Published')}`))
       }
 
       console.log(chalk.dim('─'.repeat(50)))
@@ -91,32 +91,32 @@ program
     catch (error) {
       console.log()
       console.log(chalk.red('╔═══════════════════════════════════════════════════════════════════════════╗'))
-      console.log(chalk.red('║                           ❌ RELEASE FAILED                             ║'))
+      console.log(chalk.red('║                          RELEASE FAILED                          ║'))
       console.log(chalk.red('╚═══════════════════════════════════════════════════════════════════════════╝'))
       console.log()
 
       if (error instanceof Error) {
         // Show the detailed error message
-        console.log(chalk.red.bold('🚑 Error Details'))
+        console.log(chalk.red.bold('Error Details'))
         console.log(chalk.red.dim('─'.repeat(30)))
         console.log(chalk.red(`  ${error.message}`))
         console.log()
 
         // Provide helpful suggestions based on error type
         if (error.message.includes('Tests failed')) {
-          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.bold('Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow('  • Add test files to your project, or'))
           console.log(chalk.yellow(`  • Skip tests with: ${chalk.white.bold('bun run release --skip-tests')}`))
         }
         else if (error.message.includes('Uncommitted changes')) {
-          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.bold('Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow(`  • Commit your changes with: ${chalk.white.bold('git add . && git commit -m "your message"')}`))
           console.log(chalk.yellow(`  • Or stash them with: ${chalk.white.bold('git stash')}`))
         }
         else if (error.message.includes('TypeScript errors')) {
-          console.log(chalk.yellow.bold('💡 Suggested Solutions'))
+          console.log(chalk.yellow.bold('Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow(`  • Fix TypeScript errors with: ${chalk.white.bold('bun run typecheck')}`))
           console.log(chalk.yellow(`  • Or skip type checking with: ${chalk.white.bold('bun run release --skip-lint')}`))

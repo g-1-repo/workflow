@@ -49,7 +49,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
     process.stdout.write('\n')
     process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
-    process.stdout.write('║                    🔧 DEPLOYMENT CONFIGURATION                  ║\n')
+    process.stdout.write('║                 DEPLOYMENT CONFIGURATION                 ║\n')
     process.stdout.write('╚══════════════════════════════════════════════════════════════╝\n')
     process.stdout.write('\n')
 
@@ -117,7 +117,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
 
       process.stdout.write('\n')
       process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
-      process.stdout.write('║                    ⚠️  UNCOMMITTED CHANGES                    ║\n')
+      process.stdout.write('║                  UNCOMMITTED CHANGES                  ║\n')
       process.stdout.write('╚══════════════════════════════════════════════════════════════╝\n')
       process.stdout.write('\n')
       process.stdout.write('\x1B[1m\x1B[33mThe following files have uncommitted changes:\x1B[0m\n')
