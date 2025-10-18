@@ -7,6 +7,42 @@ import { execa } from 'execa'
 import * as semver from 'semver'
 import { createGitStore } from '../core/git-store.js'
 
+// Detection functions
+async function detectCloudflareSetup(): Promise<boolean> {
+  try {
+    const fs = await import('node:fs/promises')
+    // Check for wrangler.toml or wrangler.json
+    try {
+      await fs.access('wrangler.toml')
+      return true
+    }
+    catch {
+      try {
+        await fs.access('wrangler.json')
+        return true
+      }
+      catch {
+        return false
+      }
+    }
+  }
+  catch {
+    return false
+  }
+}
+
+async function detectNpmSetup(): Promise<boolean> {
+  try {
+    const fs = await import('node:fs/promises')
+    const packageJson = JSON.parse(await fs.readFile('package.json', 'utf-8'))
+    // Check if it's a publishable package (has name and not private)
+    return !!(packageJson.name && !packageJson.private)
+  }
+  catch {
+    return false
+  }
+}
+
 export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowStep[] {
   return [
     // Quality Gates First
@@ -151,7 +187,7 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
 
         if (hasChanges && !options.force) {
           // If not in interactive mode and not forced, offer to auto-handle
-          if (!options.interactive) {
+          if (!options.nonInteractive) {
             const enquirer = await import('enquirer')
             const { prompt } = enquirer.default || enquirer
 
@@ -205,8 +241,8 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
             }
           }
           else {
-            // In interactive mode, just inform and continue
-            helpers.setOutput('⚠️  Uncommitted changes detected but continuing in interactive mode')
+            // In non-interactive mode, just inform and continue
+            helpers.setOutput('⚠️  Uncommitted changes detected but continuing (non-interactive mode)')
           }
         }
         else if (hasChanges && options.force) {
@@ -272,6 +308,84 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         ctx.version!.type = versionBump
 
         helpers.setTitle(`Version calculation - ✅ ${ctx.version!.current} → ${nextVersion} (${versionBump})`)
+      },
+    },
+
+    // Interactive Deployment Configuration
+    {
+      title: 'Deployment configuration',
+      skip: () => options.nonInteractive === true, // Skip if explicitly non-interactive
+      task: async (ctx, helpers) => {
+        // If CLI options are already provided, respect them
+        if (options.skipCloudflare !== undefined || options.skipNpm !== undefined) {
+          helpers.setTitle('Deployment configuration - ✅ Using CLI options')
+          return
+        }
+
+        helpers.setOutput('Detecting available deployment options...')
+
+        const hasCloudflare = await detectCloudflareSetup()
+        const hasNpmSetup = await detectNpmSetup()
+
+        const availableOptions = []
+
+        if (hasCloudflare) {
+          availableOptions.push({
+            name: 'cloudflare',
+            message: '🌩️  Deploy to Cloudflare (wrangler.toml detected)',
+            value: 'cloudflare',
+          })
+        }
+
+        if (hasNpmSetup) {
+          availableOptions.push({
+            name: 'npm',
+            message: '📦 Publish to npm registry',
+            value: 'npm',
+          })
+        }
+
+        if (availableOptions.length === 0) {
+          helpers.setTitle('Deployment configuration - ℹ️ No deployment options detected')
+          return
+        }
+
+        const enquirer = await import('enquirer')
+        const { prompt } = enquirer.default || enquirer
+
+        const response = await prompt({
+          type: 'multiselect',
+          name: 'deployments',
+          message: 'Select deployment targets:',
+          choices: [
+            ...availableOptions,
+            {
+              name: 'none',
+              message: '🚫 Skip all deployments',
+              value: 'none',
+            },
+          ],
+          validate: (choices: string[]) => {
+            if (choices.includes('none') && choices.length > 1) {
+              return 'Cannot select "Skip all" with other options'
+            }
+            return true
+          },
+        } as any) as { deployments: string[] }
+
+        // Update options based on user selection
+        if (response.deployments.includes('none')) {
+          options.skipCloudflare = true
+          options.skipNpm = true
+          helpers.setTitle('Deployment configuration - ✅ All deployments skipped')
+        }
+        else {
+          options.skipCloudflare = !response.deployments.includes('cloudflare')
+          options.skipNpm = !response.deployments.includes('npm')
+
+          const selected = response.deployments.join(', ')
+          helpers.setTitle(`Deployment configuration - ✅ Selected: ${selected}`)
+        }
       },
     },
 

@@ -288,6 +288,7 @@ export interface ReleaseOptions extends CliOptions {
   skipCloudflare?: boolean
   skipNpm?: boolean
   force?: boolean
+  nonInteractive?: boolean
 }
 
 export interface FeatureOptions extends CliOptions {

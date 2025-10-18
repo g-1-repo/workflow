@@ -27,6 +27,7 @@ program
   .option('--skip-lint', 'Skip linting')
   .option('--skip-cloudflare', 'Skip Cloudflare deployment')
   .option('--skip-npm', 'Skip npm publishing')
+  .option('--non-interactive', 'Run in non-interactive mode (skip prompts)')
   .option('--dry-run', 'Show what would be done without executing')
   .option('--verbose', 'Show detailed output')
   .option('--force', 'Skip uncommitted changes check (use with caution)')
