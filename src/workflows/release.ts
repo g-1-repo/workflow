@@ -310,45 +310,50 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         // If CLI options are provided, use them
         if (options.skipCloudflare !== undefined || options.skipNpm !== undefined) {
           // CLI flags provided, use them as-is
-        } else {
+        }
+        else {
           // Interactive prompts for available deployment options
           const { prompt } = await import('enquirer')
-          
+
           if (hasNpmSetup && options.skipNpm === undefined) {
             const response = await prompt({
               type: 'confirm',
               name: 'publishToNpm',
               message: '📦 Publish to npm registry?',
-              initial: false
+              initial: false,
             }) as { publishToNpm: boolean }
-            
+
             options.skipNpm = !response.publishToNpm
-          } else {
+          }
+          else {
             options.skipNpm = true
           }
-          
+
           if (hasCloudflare && options.skipCloudflare === undefined) {
             const response = await prompt({
-              type: 'confirm', 
+              type: 'confirm',
               name: 'deployToCloudflare',
               message: '🌩️  Deploy to Cloudflare?',
-              initial: false
+              initial: false,
             }) as { deployToCloudflare: boolean }
-            
+
             options.skipCloudflare = !response.deployToCloudflare
-          } else {
+          }
+          else {
             options.skipCloudflare = true
           }
         }
-        
+
         const enabledTargets = []
-        if (hasCloudflare && !options.skipCloudflare) enabledTargets.push('Cloudflare')
-        if (hasNpmSetup && !options.skipNpm) enabledTargets.push('npm')
-        
+        if (hasCloudflare && !options.skipCloudflare)
+          enabledTargets.push('Cloudflare')
+        if (hasNpmSetup && !options.skipNpm)
+          enabledTargets.push('npm')
+
         const deploymentSummary = enabledTargets.length > 0
           ? `Will deploy to: ${enabledTargets.join(', ')}`
           : 'All deployments skipped'
-          
+
         helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
       },
     },
