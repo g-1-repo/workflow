@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0] - 2025-10-18
+
+### Features
+
+- add interactive prompt for uncommitted changes
+
+
 ## [2.1.1] - 2025-10-18
 
 
