@@ -23,9 +23,9 @@ A powerful, type-safe CLI tool built for modern development teams that need cons
 
 ### 🌟 **Developer Experience**
 - **Zero Config**: Works out of the box with sensible defaults
-- **Interactive**: Guided prompts for complex decisions
-- **Consistent**: Same experience across all your projects
-- **Fast**: Optimized performance with lazy loading
+- **Interactive**: Smart deployment configuration and uncommitted changes handling
+- **Crash-Proof**: Robust error handling prevents workflow interruptions
+- **Fast**: Optimized performance with concurrent operations
 
 ## 🚀 Quick Start
 
@@ -45,16 +45,25 @@ npm install -g @go-corp/workflow
 ### Basic Usage
 
 ```bash
-# Complete release workflow
+# Interactive release workflow (recommended)
 go-workflow release
+# → Prompts for deployment targets (npm, Cloudflare)
+# → Handles uncommitted changes interactively
+# → Executes complete release pipeline
 
 # Release with specific version bump
 go-workflow release --type minor
 
-# Skip specific steps
-go-workflow release --skip-tests --skip-cloudflare
+# Skip specific deployments via CLI flags
+go-workflow release --skip-cloudflare --skip-npm
 
-# Show status
+# Force release with uncommitted changes
+go-workflow release --force
+
+# Non-interactive mode (for CI/CD)
+go-workflow release --non-interactive --skip-cloudflare --skip-npm
+
+# Show workflow status
 go-workflow status
 ```
 
@@ -62,34 +71,51 @@ go-workflow status
 
 ### `go-workflow release`
 
-Execute the complete release workflow:
+Execute the complete release workflow with interactive configuration:
 
 ```bash
+🔧 Deployment Configuration
+----------------------------------------
+✔ 📦 Publish to npm registry? (y/N) · true
+
+⚠️  Uncommitted changes detected:
+  - README.md
+
+? How would you like to handle uncommitted changes? › 📝 Commit all changes now
+✅ Changes committed
+
 ✔ Quality Gates
-  ✔ Auto-fix linting issues
-  ✔ Type checking
-  ✔ Running tests
-✔ Git repository analysis
-✔ Version calculation
+  ✔ Auto-fix linting issues - ✅ Fixed
+  ✔ Type checking - ✅ Passed
+  ✔ Running tests - ✅ No tests found (skipping)
+✔ Git repository analysis - ✅ golive-dev/workflow on main
+✔ Version calculation - ✅ 2.10.1 → 2.11.0 (minor)
+✔ Deployment configuration - ✅ Will deploy to: npm
 ✔ Release execution
-  ✔ Update package.json version
-  ✔ Generate changelog
-  ✔ Commit release changes
-  ✔ Create git tag
-  ✔ Push to remote
-✔ Build project
-✔ Deploy to Cloudflare
-✔ Publish to npm
-✔ Create GitHub release
+  ✔ Update package.json version - ✅ 2.11.0
+  ✔ Generate changelog - ✅ CHANGELOG.md updated
+  ✔ Commit release changes - ✅ chore: release v2.11.0
+  ✔ Create git tag - ✅ v2.11.0
+  ✔ Push to remote - ✅ Complete
+✔ Build project - ✅ Build complete
+↓ Deploy to Cloudflare [SKIPPED]
+✔ Publish to npm - ✅ v2.11.0 published (you may need to interact with prompts)
+✔ Create GitHub release - ✅ v2.11.0 released
+
+🎉 Release completed successfully!
+📦 Version: 2.10.1 → 2.11.0
+📂 Repository: golive-dev/workflow
 ```
 
 **Options:**
 - `--type <patch|minor|major>` - Force specific version bump
 - `--skip-tests` - Skip test execution
 - `--skip-lint` - Skip linting step
-- `--skip-cloudflare` - Skip Cloudflare deployment
-- `--skip-npm` - Skip npm publishing
-- `--dry-run` - Show what would be done without executing
+- `--skip-cloudflare` - Skip Cloudflare deployment (or use interactive prompt)
+- `--skip-npm` - Skip npm publishing (or use interactive prompt)
+- `--non-interactive` - Run without prompts (for CI/CD environments)
+- `--force` - Skip uncommitted changes check
+- `--dry-run` - Show what would be done without executing *(coming soon)*
 - `--verbose` - Show detailed output
 
 ### `go-workflow feature` *(Coming Soon)*
@@ -113,12 +139,17 @@ Use as a library in your Node.js applications:
 ```typescript
 import { createReleaseWorkflow, createTaskEngine, createWorkflow, quickRelease } from '@go-corp/workflow'
 
-// Quick release
+// Quick release with interactive prompts
 await quickRelease({ type: 'minor' })
 
-// Custom workflow
-const steps = createReleaseWorkflow({ skipTests: true })
-const engine = createTaskEngine()
+// Custom workflow (note: createReleaseWorkflow is now async)
+const steps = await createReleaseWorkflow({ 
+  skipTests: true, 
+  nonInteractive: true, // Skip prompts for programmatic use
+  skipCloudflare: true,
+  skipNpm: true
+})
+const engine = createTaskEngine({ showTimer: true })
 const result = await engine.execute(steps)
 
 // Build custom workflows
@@ -223,12 +254,3 @@ MIT © [Go Corp](https://github.com/go-corp)
 ---
 
 **Built with ❤️ for modern development teams**
-# Test change for interactive prompt
-# Test interactive deployment
-# Test npm prompt
-# Test non-interactive fix
-# Test deployment prompt fix
-# Test successful release
-# Test graceful npm failure
-# Test change
-# Final test

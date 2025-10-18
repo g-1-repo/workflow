@@ -18,7 +18,9 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ### CLI Usage
 - `bun run dev:cli` - Build and run CLI in development
-- `node dist/cli.js release` - Run the release workflow
+- `bun run release` or `node dist/cli.js release` - Run interactive release workflow
+- `bun run release --skip-cloudflare --skip-npm` - Release without deployments
+- `bun run release --non-interactive --force` - Non-interactive mode for CI
 - `node dist/cli.js status` - Show workflow status
 - `node dist/cli.js feature` - Create feature branch (coming soon)
 
@@ -59,8 +61,17 @@ This is an enterprise-grade TypeScript workflow automation tool with a modular a
 
 **Enterprise Features**
 - Quality gates enforced before any release (lint, typecheck, tests)
-- Multi-platform deployment (npm, Cloudflare, GitHub releases)
+- Multi-platform deployment (npm, Cloudflare, GitHub releases)  
 - Fallback strategy: bun → npm → direct tools (bunx/npx)
+- Interactive workflow with upfront configuration
+- Crash-proof execution with error resilience
+
+**Interactive Workflow Features**
+- **Upfront Configuration**: Deployment targets selected before workflow starts
+- **Uncommitted Changes Handling**: Interactive prompts for commit, stash, or force options
+- **npm OTP Support**: Interactive terminal access for 2FA/OTP authentication
+- **Error Recovery**: Non-fatal failures with clear guidance and workflow continuation
+- **CI/CD Mode**: `--non-interactive` flag for automated environments
 
 **AI Integration Points**
 - Branch name suggestions based on changed files and commit history
@@ -83,17 +94,22 @@ Following the user's preference, this project is **bun-first**:
 4. Installation examples show `bun install` first
 
 ### Release Process
-The automated release workflow (`go-workflow release`) includes:
-1. Quality gates (auto-fix lint, typecheck, tests)
-2. Git analysis and semantic version calculation
-3. Package.json update, changelog generation, git tag creation
-4. Build step for deployment
-5. Multi-platform publishing (Cloudflare, npm, GitHub releases)
+The interactive release workflow (`bun run release`) includes:
+1. **Interactive Configuration**: Prompts for deployment targets and uncommitted changes
+2. **Quality Gates**: Auto-fix lint, typecheck, tests with graceful fallbacks
+3. **Git Analysis**: Repository analysis and semantic version calculation
+4. **Release Execution**: Package.json update, changelog generation, git tag creation
+5. **Build Step**: Project build for deployment
+6. **Deployments**: Multi-platform publishing (npm with OTP support, GitHub releases)
+7. **Error Resilience**: Non-fatal deployment failures with clear error messages
 
 ### Error Handling Strategy
-- Custom error types: WorkflowError, GitError, ConfigError, DeploymentError
-- Graceful degradation (e.g., GitHub release failure doesn't fail entire workflow)
-- Comprehensive error context preservation
+- **Interactive Error Recovery**: Uncommitted changes and deployment failures handled gracefully
+- **Non-Fatal Deployments**: npm publish failures don't stop the workflow
+- **Clear Error Messages**: Specific guidance for authentication, permission, and OTP errors
+- **Crash Prevention**: All interactive prompts moved upfront to prevent mid-workflow freezing
+- **Custom Error Types**: WorkflowError, GitError, ConfigError, DeploymentError
+- **Comprehensive Context**: Error context preserved throughout the workflow
 
 ### Future Extensions
 - Configuration system (`.go-workflow.config.js`)
