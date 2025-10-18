@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.0] - 2025-10-18
+
+### Features
+
+- improve test handling and error reporting in release workflow
+
+### Bug Fixes
+
+- improve version detection to use latest git tag
+- improve error propagation and test failure handling
+
+### Other Changes
+
+- chore: release v0.1.0
+- chore: release v0.1.0
+
+
 ## [0.1.0] - 2025-10-18
 
 ### Features
