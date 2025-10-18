@@ -4,10 +4,8 @@
  * Main library exports for programmatic usage
  */
 
-export { createGitStore, GitStore } from './core/git-store.js'
 // Core exports
 export { createTaskEngine, TaskEngine } from './core/task-engine.js'
-
 // Type exports
 export type {
   BranchOptions,
@@ -31,6 +29,9 @@ export type {
 
 // Workflow exports
 export { createReleaseWorkflow } from './workflows/release.js'
+
+// Re-export consolidated Git operations from @go-corp/utils
+export { createGitOperations as createGitStore, GitOperations as GitStore } from '@go-corp/utils/node'
 
 /**
  * Quick release function for simple usage

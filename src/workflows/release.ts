@@ -4,9 +4,9 @@
 
 import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 import process from 'node:process'
+import { createGitOperations } from '@go-corp/utils/node'
 import { execa } from 'execa'
 import * as semver from 'semver'
-import { createGitStore } from '../core/git-store.js'
 
 // Detection functions
 async function detectCloudflareSetup(): Promise<boolean> {
@@ -88,7 +88,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
 
   // Handle uncommitted changes upfront (before workflow starts)
   if (!options.force) {
-    const git = createGitStore()
+    const git = createGitOperations()
     const hasChanges = await git.hasUncommittedChanges()
 
     if (hasChanges) {
@@ -287,8 +287,8 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
     {
       title: 'Git repository analysis',
       task: async (ctx, helpers) => {
-        helpers.setOutput('Initializing Git store...')
-        const git = createGitStore()
+        helpers.setOutput('Initializing Git operations...')
+        const git = createGitOperations()
 
         helpers.setOutput('Checking repository status...')
         const isRepo = await git.isGitRepository()
@@ -331,7 +331,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
     {
       title: 'Version calculation',
       task: async (ctx, helpers) => {
-        const git = createGitStore()
+        const git = createGitOperations()
 
         helpers.setOutput('Analyzing commits since last release...')
         const commits = await git.getCommitsSinceTag()
@@ -395,7 +395,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         {
           title: 'Update package.json version',
           task: async (ctx, helpers) => {
-            const git = createGitStore()
+            const git = createGitOperations()
             helpers.setOutput(`Setting version to ${ctx.version!.next}...`)
 
             await git.updatePackageVersion(ctx.version!.next)
@@ -433,7 +433,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         {
           title: 'Commit release changes',
           task: async (ctx, helpers) => {
-            const git = createGitStore()
+            const git = createGitOperations()
 
             helpers.setOutput('Staging files...')
             await git.stageFiles(['package.json', 'CHANGELOG.md'])
@@ -448,7 +448,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         {
           title: 'Create git tag',
           task: async (ctx, helpers) => {
-            const git = createGitStore()
+            const git = createGitOperations()
             const tagName = `v${ctx.version!.next}`
 
             helpers.setOutput(`Creating tag ${tagName}...`)
@@ -460,7 +460,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         {
           title: 'Push to remote',
           task: async (ctx, helpers) => {
-            const git = createGitStore()
+            const git = createGitOperations()
 
             helpers.setOutput('Pushing commits...')
             await git.push()
