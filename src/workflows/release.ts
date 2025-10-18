@@ -99,36 +99,40 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       skip: () => (options.skipNpm && options.skipCloudflare) || false,
       task: async (ctx, helpers) => {
         const checks = []
-        
+
         if (!options.skipNpm) {
           helpers.setOutput('Checking npm authentication...')
           try {
             const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
             if (result.stdout.trim()) {
               checks.push(`npm: ${result.stdout.trim()}`)
-            } else {
+            }
+            else {
               throw new Error('npm authentication required. Run: npm login')
             }
-          } catch {
+          }
+          catch {
             throw new Error('npm authentication required. Run: npm login')
           }
         }
-        
+
         if (!options.skipCloudflare) {
           helpers.setOutput('Checking Cloudflare authentication...')
           try {
             await execa('bunx', ['wrangler', 'whoami'], { stdio: 'pipe' })
             checks.push('Cloudflare: authenticated')
-          } catch {
+          }
+          catch {
             try {
               await execa('npx', ['wrangler', 'whoami'], { stdio: 'pipe' })
               checks.push('Cloudflare: authenticated')
-            } catch {
+            }
+            catch {
               throw new Error('Cloudflare authentication required. Run: bunx wrangler login')
             }
           }
         }
-        
+
         const summary = checks.length > 0 ? checks.join(', ') : 'No authentication needed'
         helpers.setTitle(`Authentication verification - ✅ ${summary}`)
       },
@@ -528,13 +532,14 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           // Use npm with non-interactive flags to prevent hanging
           const publishResult = await execa('npm', [
             'publish',
-            '--access', 'public',
+            '--access',
+            'public',
             '--non-interactive',
             '--no-git-checks',
-            '--verbose'
-          ], { 
+            '--verbose',
+          ], {
             stdio: 'pipe',
-            timeout: 60000 // 60 second timeout
+            timeout: 60000, // 60 second timeout
           })
 
           ctx.deployments = {
@@ -542,7 +547,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             npm: {
               registry: 'https://registry.npmjs.org',
               tag: 'latest',
-              access: 'public'
+              access: 'public',
             },
           }
 
