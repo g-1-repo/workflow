@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.4] - 2025-10-18
+
+### Other Changes
+
+- test: add change to test successful release
+
+
 ## [2.3.3] - 2025-10-18
 
 ### Bug Fixes
