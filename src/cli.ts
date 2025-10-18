@@ -33,8 +33,6 @@ program
   .option('--force', 'Skip uncommitted changes check (use with caution)')
   .action(async (options: ReleaseOptions) => {
     try {
-      // Clear screen and show main header
-      process.stdout.write('\x1B[2J\x1B[0f') // Clear screen
       console.log()
       console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════════╗'))
       console.log(chalk.cyan('║                   🚀 GO-WORKFLOW V2 - RELEASE AUTOMATION                ║'))

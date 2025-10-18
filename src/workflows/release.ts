@@ -47,8 +47,6 @@ async function detectNpmSetup(): Promise<boolean> {
 export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
   // Interactive deployment configuration - ask questions upfront
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
-    // Clear screen and show header
-    process.stdout.write('\x1B[2J\x1B[0f') // Clear screen and move cursor to top
     process.stdout.write('\n')
     process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
     process.stdout.write('║                    🔧 DEPLOYMENT CONFIGURATION                  ║\n')
@@ -69,7 +67,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         name: 'publishToNpm',
         message: '  Publish to npm registry?',
         initial: false,
-        prefix: '  '
+        prefix: '  ',
       }) as { publishToNpm: boolean }
 
       options.skipNpm = !response.publishToNpm
@@ -87,7 +85,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         name: 'deployToCloudflare',
         message: '  Deploy to Cloudflare?',
         initial: false,
-        prefix: '  '
+        prefix: '  ',
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
@@ -117,8 +115,6 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       const changedFiles = await git.getChangedFiles()
       const changesList = changedFiles.map(file => `    ${file}`).join('\n')
 
-      // Clear and show warning header
-      process.stdout.write('\x1B[2J\x1B[0f') // Clear screen
       process.stdout.write('\n')
       process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
       process.stdout.write('║                    ⚠️  UNCOMMITTED CHANGES                    ║\n')
@@ -141,7 +137,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             { name: 'stash', message: 'Stash changes for later', value: 'stash' },
             { name: 'force', message: 'Continue anyway (--force)', value: 'force' },
           ],
-          prefix: '  '
+          prefix: '  ',
         }) as { action: 'commit' | 'stash' | 'force' }
 
         process.stdout.write('\n')
@@ -157,7 +153,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             name: 'message',
             message: '  Commit message:',
             initial: 'chore: commit changes before release',
-            prefix: '  '
+            prefix: '  ',
           }) as { message: string }
 
           // Commit changes
