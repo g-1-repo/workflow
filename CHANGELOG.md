@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.3] - 2025-10-18
+
+### Bug Fixes
+
+- replace interactive deployment prompt with clear CLI-based options
+
+### Other Changes
+
+- test: add change to test deployment prompt fix
+
+
 ## [2.3.2] - 2025-10-18
 
 ### Bug Fixes
