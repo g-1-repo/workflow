@@ -313,33 +313,31 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         }
         else {
           // Interactive prompts for available deployment options
-          const { prompt } = await import('enquirer')
-
+          const enquirer = await import('enquirer')
+          
           if (hasNpmSetup && options.skipNpm === undefined) {
-            const response = await prompt({
+            const response = await enquirer.default.prompt({
               type: 'confirm',
               name: 'publishToNpm',
               message: '📦 Publish to npm registry?',
-              initial: false,
+              initial: false
             }) as { publishToNpm: boolean }
-
+            
             options.skipNpm = !response.publishToNpm
-          }
-          else {
+          } else {
             options.skipNpm = true
           }
-
+          
           if (hasCloudflare && options.skipCloudflare === undefined) {
-            const response = await prompt({
-              type: 'confirm',
+            const response = await enquirer.default.prompt({
+              type: 'confirm', 
               name: 'deployToCloudflare',
               message: '🌩️  Deploy to Cloudflare?',
-              initial: false,
+              initial: false
             }) as { deployToCloudflare: boolean }
-
+            
             options.skipCloudflare = !response.deployToCloudflare
-          }
-          else {
+          } else {
             options.skipCloudflare = true
           }
         }
