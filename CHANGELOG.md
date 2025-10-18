@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1] - 2025-10-18
+
+### Bug Fixes
+
+- replace problematic interactive prompts with clear error messages
+- improve non-interactive mode deployment behavior
+
+
 ## [2.3.0] - 2025-10-18
 
 ### Features
