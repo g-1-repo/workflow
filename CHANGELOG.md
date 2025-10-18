@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.1] - 2025-10-18
+
+### Bug Fixes
+
+- revert to fully interactive npm publish (stdio inherit)
+
+
 ## [2.10.0] - 2025-10-18
 
 ### Features
