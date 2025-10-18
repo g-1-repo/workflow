@@ -534,16 +534,23 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         helpers.setOutput('Publishing to npm registry...')
 
         try {
-          // Use npm with non-interactive flags to prevent hanging
+          // Use npm with truly non-interactive flags and environment
           const publishResult = await execa('npm', [
             'publish',
             '--access', 'public',
-            '--non-interactive',
-            '--no-git-checks',
-            '--verbose'
+            '--registry', 'https://registry.npmjs.org/',
+            '--no-git-checks'
           ], {
             stdio: 'pipe',
-            timeout: 60000 // 60 second timeout
+            timeout: 30000, // 30 second timeout
+            env: {
+              ...process.env,
+              NPM_CONFIG_AUDIT: 'false',
+              NPM_CONFIG_FUND: 'false', 
+              NPM_CONFIG_UPDATE_NOTIFIER: 'false',
+              CI: 'true' // Force CI mode to prevent interactive prompts
+            },
+            input: '\n' // Send enter to any potential prompts
           })
 
           ctx.deployments = {
@@ -560,14 +567,28 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         catch (error) {
           // Don't fail the entire workflow if npm publishing fails
           const errorMessage = error instanceof Error ? error.message : String(error)
-          if (errorMessage.includes('401') || errorMessage.includes('not authenticated')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: Not authenticated (continuing)')
+          const errorOutput = error instanceof Error && 'stderr' in error ? error.stderr : ''
+          const fullError = `${errorMessage} ${errorOutput}`.toLowerCase()
+          
+          if (fullError.includes('401') || fullError.includes('not authenticated') || fullError.includes('login')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: Authentication required')
+            helpers.setOutput('❌ Please run: npm login')
           }
-          else if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: No permission (continuing)')
+          else if (fullError.includes('403') || fullError.includes('forbidden') || fullError.includes('permission')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: No permission to publish')
+            helpers.setOutput('❌ Check package name and access rights')
+          }
+          else if (fullError.includes('otp') || fullError.includes('one-time') || fullError.includes('two-factor')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: 2FA/OTP required')
+            helpers.setOutput('❌ OTP required but cannot be provided in automated workflow')
+          }
+          else if (fullError.includes('package already exists') || fullError.includes('version already published')) {
+            helpers.setTitle('Publish to npm - ⚠️ Failed: Version already published')
+            helpers.setOutput('❌ This version already exists on npm')
           }
           else {
-            helpers.setTitle('Publish to npm - ⚠️ Failed (continuing)')
+            helpers.setTitle('Publish to npm - ⚠️ Failed: Unknown error')
+            helpers.setOutput(`❌ Error: ${errorMessage.slice(0, 100)}...`)
           }
         }
       },
