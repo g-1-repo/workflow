@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.0] - 2025-10-18
+
+### Features
+
+- add interactive deployment configuration
+
+### Other Changes
+
+- test: add test change for interactive workflow demo
+
+
 ## [2.2.1] - 2025-10-18
 
 
