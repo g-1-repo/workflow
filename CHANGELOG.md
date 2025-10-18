@@ -6,6 +6,21 @@
 
 - improve test handling and error reporting in release workflow
 
+### Bug Fixes
+
+- improve error propagation and test failure handling
+
+### Other Changes
+
+- chore: release v0.1.0
+
+
+## [0.1.0] - 2025-10-18
+
+### Features
+
+- improve test handling and error reporting in release workflow
+
 
 All notable changes to this project will be documented in this file.
 
