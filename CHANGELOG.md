@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.5.0] - 2025-10-18
+
+### Features
+
+- move interactive deployment prompts to beginning of workflow - ask questions before quality gates
+
+### Bug Fixes
+
+- clean up duplicate deployment configuration code
+- correct enquirer import syntax for interactive prompts
+
+
 ## [2.4.3] - 2025-10-18
 
 ### Bug Fixes
