@@ -48,41 +48,43 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
     console.log('\n🔧 Deployment Configuration')
     console.log('----------------------------------------')
-    
+
     const hasCloudflare = await detectCloudflareSetup()
     const hasNpmSetup = await detectNpmSetup()
-    
+
     if (hasNpmSetup && options.skipNpm === undefined) {
       const enquirer = await import('enquirer')
       const response = await enquirer.default.prompt({
         type: 'confirm',
         name: 'publishToNpm',
         message: '📦 Publish to npm registry?',
-        initial: false
+        initial: false,
       }) as { publishToNpm: boolean }
-      
+
       options.skipNpm = !response.publishToNpm
     }
-    
+
     if (hasCloudflare && options.skipCloudflare === undefined) {
       const enquirer = await import('enquirer')
       const response = await enquirer.default.prompt({
         type: 'confirm',
-        name: 'deployToCloudflare', 
+        name: 'deployToCloudflare',
         message: '🌩️  Deploy to Cloudflare?',
-        initial: false
+        initial: false,
       }) as { deployToCloudflare: boolean }
-      
+
       options.skipCloudflare = !response.deployToCloudflare
     }
-    
+
     // Set defaults for anything not detected
-    if (options.skipCloudflare === undefined) options.skipCloudflare = true
-    if (options.skipNpm === undefined) options.skipNpm = true
-    
+    if (options.skipCloudflare === undefined)
+      options.skipCloudflare = true
+    if (options.skipNpm === undefined)
+      options.skipNpm = true
+
     console.log('\n')
   }
-  
+
   // Set defaults for non-interactive mode
   if (options.nonInteractive && options.skipCloudflare === undefined && options.skipNpm === undefined) {
     options.skipCloudflare = true
@@ -310,14 +312,16 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       title: 'Deployment configuration',
       task: async (ctx, helpers) => {
         const enabledTargets = []
-        
-        if (!options.skipCloudflare) enabledTargets.push('Cloudflare')
-        if (!options.skipNpm) enabledTargets.push('npm')
-        
+
+        if (!options.skipCloudflare)
+          enabledTargets.push('Cloudflare')
+        if (!options.skipNpm)
+          enabledTargets.push('npm')
+
         const summary = enabledTargets.length > 0
           ? `Will deploy to: ${enabledTargets.join(', ')}`
           : 'All deployments skipped'
-          
+
         helpers.setTitle(`Deployment configuration - ✅ ${summary}`)
       },
     },
