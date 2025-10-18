@@ -48,9 +48,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   // Interactive deployment configuration - ask questions upfront
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
     process.stdout.write('\n')
-    process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
+    process.stdout.write('╔══════════════════════════════════════════════════════════╗\n')
     process.stdout.write('║                 DEPLOYMENT CONFIGURATION                 ║\n')
-    process.stdout.write('╚══════════════════════════════════════════════════════════════╝\n')
+    process.stdout.write('╚══════════════════════════════════════════════════════════╝\n')
     process.stdout.write('\n')
 
     const hasCloudflare = await detectCloudflareSetup()
@@ -116,9 +116,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       const changesList = changedFiles.map(file => `    ${file}`).join('\n')
 
       process.stdout.write('\n')
-      process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
+      process.stdout.write('╔═══════════════════════════════════════════════════════╗\n')
       process.stdout.write('║                  UNCOMMITTED CHANGES                  ║\n')
-      process.stdout.write('╚══════════════════════════════════════════════════════════════╝\n')
+      process.stdout.write('╚═══════════════════════════════════════════════════════╝\n')
       process.stdout.write('\n')
       process.stdout.write('\x1B[1m\x1B[33mThe following files have uncommitted changes:\x1B[0m\n')
       process.stdout.write(`\n${changesList}\n\n`)

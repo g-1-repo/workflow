@@ -34,16 +34,16 @@ program
   .action(async (options: ReleaseOptions) => {
     try {
       console.log()
-      console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════════╗'))
-      console.log(chalk.cyan('║                  GO-WORKFLOW V2 - RELEASE AUTOMATION                   ║'))
-      console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════════════════╝'))
+      console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.cyan('║                  GO-WORKFLOW V2 - RELEASE AUTOMATION                  ║'))
+      console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════════════╝'))
       console.log(chalk.gray(`\n                              Version ${version}\n`))
 
       if (options.dryRun) {
-        console.log(chalk.yellow.bold('┌─────────────────────────────────────────────────────────────────────────┐'))
+        console.log(chalk.yellow.bold('┌──────────────────────────────────────────────────────────────┐'))
         console.log(chalk.yellow.bold('│                     DRY RUN MODE ENABLED                     │'))
-        console.log(chalk.yellow.bold('│                   No changes will be made                   │'))
-        console.log(chalk.yellow.bold('└─────────────────────────────────────────────────────────────────────────┘'))
+        console.log(chalk.yellow.bold('│                   No changes will be made                    │'))
+        console.log(chalk.yellow.bold('└──────────────────────────────────────────────────────────────┘'))
         console.log()
       }
 
@@ -61,9 +61,9 @@ program
 
       // Success summary
       console.log()
-      console.log(chalk.green('╔═══════════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.green('╔═════════════════════════════════════════════════════════════════════╗'))
       console.log(chalk.green('║                   RELEASE COMPLETED SUCCESSFULLY!                   ║'))
-      console.log(chalk.green('╚═══════════════════════════════════════════════════════════════════════════╝'))
+      console.log(chalk.green('╚═════════════════════════════════════════════════════════════════════╝'))
       console.log()
 
       console.log(chalk.bold('Release Summary'))
