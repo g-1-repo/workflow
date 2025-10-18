@@ -4,12 +4,12 @@
  * go-workflow CLI - Enterprise release automation
  */
 
-import { program } from 'commander'
+import type { ReleaseOptions } from './types/index.js'
+import process from 'node:process'
 import chalk from 'chalk'
+import { program } from 'commander'
 import { createTaskEngine } from './core/task-engine.js'
 import { createReleaseWorkflow } from './workflows/release.js'
-import type { ReleaseOptions } from './types/index.js'
-
 // Version from package.json
 const version = '2.0.1'
 
@@ -41,11 +41,11 @@ program
 
       // Create workflow steps
       const steps = createReleaseWorkflow(options)
-      
+
       // Create task engine with listr2
       const taskEngine = createTaskEngine({
         showTimer: true,
-        clearOutput: false
+        clearOutput: false,
       })
 
       // Execute workflow
@@ -54,7 +54,7 @@ program
       // Success summary
       console.log()
       console.log(chalk.green.bold('🎉 Release completed successfully!'))
-      
+
       if (context.version) {
         console.log(chalk.gray(`📦 Version: ${context.version.current} → ${context.version.next}`))
       }
@@ -72,19 +72,42 @@ program
       }
 
       console.log()
-
-    } catch (error) {
+    }
+    catch (error) {
       console.log()
       console.log(chalk.red.bold('❌ Release failed'))
-      
+      console.log()
+
       if (error instanceof Error) {
-        console.log(chalk.red(error.message))
-        
+        // Show the detailed error message
+        console.log(chalk.red('🚑 Error Details:'))
+        console.log(chalk.red(`  ${error.message}`))
+        console.log()
+
+        // Provide helpful suggestions based on error type
+        if (error.message.includes('Tests failed')) {
+          console.log(chalk.yellow('💡 Suggestion:'))
+          console.log(chalk.yellow('  • Add test files to your project, or'))
+          console.log(chalk.yellow('  • Skip tests with: bun run release --skip-tests'))
+        }
+        else if (error.message.includes('Uncommitted changes')) {
+          console.log(chalk.yellow('💡 Suggestion:'))
+          console.log(chalk.yellow('  • Commit your changes with: git add . && git commit -m "your message"'))
+          console.log(chalk.yellow('  • Or stash them with: git stash'))
+        }
+        else if (error.message.includes('TypeScript errors')) {
+          console.log(chalk.yellow('💡 Suggestion:'))
+          console.log(chalk.yellow('  • Fix TypeScript errors with: bun run typecheck'))
+          console.log(chalk.yellow('  • Or skip type checking with: bun run release --skip-lint'))
+        }
+        console.log()
+
         if (options.verbose && error.stack) {
+          console.log(chalk.gray('Stack trace:'))
           console.log(chalk.gray(error.stack))
         }
       }
-      
+
       process.exit(1)
     }
   })
@@ -97,11 +120,11 @@ program
   .option('-t, --type <type>', 'Branch type', /^(feature|bugfix|hotfix)$/, 'feature')
   .option('--base <branch>', 'Base branch', 'main')
   .option('--auto-merge', 'Enable auto-merge when PR is approved')
-  .action(async (name, options) => {
+  .action(async (_name, _options) => {
     console.log(chalk.yellow('🚧 Feature workflow coming soon in V2!'))
     console.log(chalk.gray('This will include:'))
     console.log(chalk.gray('• AI-powered branch name suggestions'))
-    console.log(chalk.gray('• Automated PR creation'))  
+    console.log(chalk.gray('• Automated PR creation'))
     console.log(chalk.gray('• Auto-merge and cleanup'))
   })
 
@@ -123,12 +146,13 @@ program.exitOverride()
 
 try {
   program.parse()
-} catch (error) {
+}
+catch (error) {
   if (error instanceof Error && error.message.includes('outputHelp')) {
     // User asked for help, don't show error
     process.exit(0)
   }
-  
+
   console.log(chalk.red.bold('❌ Command failed'))
   if (error instanceof Error) {
     console.log(chalk.red(error.message))

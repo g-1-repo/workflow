@@ -152,8 +152,8 @@ export interface WorkflowConfig {
     remote: string
     branchNaming: {
       feature: string // e.g., "feature/{name}"
-      bugfix: string  // e.g., "bugfix/{name}"
-      hotfix: string  // e.g., "hotfix/{name}"
+      bugfix: string // e.g., "bugfix/{name}"
+      hotfix: string // e.g., "hotfix/{name}"
     }
     autoCleanup: boolean
   }
@@ -220,9 +220,9 @@ export interface WorkflowConfig {
 
   // Workflow customization
   workflows?: {
-    release?: string[]  // Custom workflow steps
-    feature?: string[]  // Feature branch workflow
-    hotfix?: string[]   // Hotfix workflow
+    release?: string[] // Custom workflow steps
+    feature?: string[] // Feature branch workflow
+    hotfix?: string[] // Hotfix workflow
   }
 }
 
@@ -261,15 +261,15 @@ export interface PluginContext {
 export type CommandHandler = (args: string[], context: WorkflowContext) => Promise<void>
 export type HookHandler = (context: WorkflowContext) => Promise<void> | void
 
-export type WorkflowEvent = 
-  | 'before:workflow'
-  | 'after:workflow' 
-  | 'before:step'
-  | 'after:step'
-  | 'on:error'
+export type WorkflowEvent
+  = | 'before:workflow'
+    | 'after:workflow'
+    | 'before:step'
+    | 'after:step'
+    | 'on:error'
 
 // =============================================================================
-// CLI Types  
+// CLI Types
 // =============================================================================
 
 export interface CliOptions {
@@ -304,7 +304,7 @@ export class WorkflowError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly context?: WorkflowContext
+    public readonly context?: WorkflowContext,
   ) {
     super(message)
     this.name = 'WorkflowError'

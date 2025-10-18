@@ -2,13 +2,14 @@
  * Enterprise Task Engine - Native listr2 integration
  */
 
-import { Listr, type ListrTask, type ListrContext } from 'listr2'
-import type { 
-  WorkflowStep, 
-  WorkflowContext, 
+import type { ListrContext, ListrTask } from 'listr2'
+import type {
   TaskEngineOptions,
-  WorkflowError 
+  WorkflowContext,
+  WorkflowError,
+  WorkflowStep,
 } from '../types/index.js'
+import { Listr } from 'listr2'
 
 export class TaskEngine {
   constructor(private options: TaskEngineOptions = {}) {}
@@ -35,7 +36,8 @@ export class TaskEngine {
     try {
       const result = await listr.run()
       return result as WorkflowContext
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof Error) {
         const workflowError: WorkflowError = {
           name: 'WorkflowExecutionError',
@@ -55,14 +57,14 @@ export class TaskEngine {
   private createListrTask(step: WorkflowStep): ListrTask {
     return {
       title: step.title,
-      enabled: typeof step.enabled === 'function' 
-        ? (ctx) => (step.enabled as Function)(ctx as WorkflowContext)
+      enabled: typeof step.enabled === 'function'
+        ? ctx => (step.enabled as (ctx: WorkflowContext) => boolean)(ctx as WorkflowContext)
         : step.enabled,
       skip: typeof step.skip === 'function'
         ? async (ctx) => {
-            const result = await (step.skip as Function)(ctx as WorkflowContext)
-            return result
-          }
+          const result = await (step.skip as (ctx: WorkflowContext) => boolean | string | Promise<boolean | string>)(ctx as WorkflowContext)
+          return result
+        }
         : step.skip,
       retry: step.retry,
       task: async (ctx, task) => {
@@ -75,13 +77,13 @@ export class TaskEngine {
               rendererOptions: {
                 collapseSubtasks: false,
               },
-            }
+            },
           )
         }
 
         // Execute main task with helpers
         if (step.task) {
-          await step.task(ctx as WorkflowContext, {
+          return await step.task(ctx as WorkflowContext, {
             setOutput: (output: string) => {
               task.output = output
             },
@@ -93,7 +95,6 @@ export class TaskEngine {
             },
           })
         }
-        return
       },
     }
   }

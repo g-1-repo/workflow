@@ -2,19 +2,20 @@
  * Git Store - Complete Git operations with AI-powered suggestions
  */
 
-import { simpleGit, type SimpleGit } from 'simple-git'
-import { execa } from 'execa'
-import type { 
-  CommitInfo, 
-  BranchOptions, 
+import type { SimpleGit } from 'simple-git'
+import type {
+  BranchOptions,
+  CommitInfo,
+  GitError,
   PullRequestOptions,
-  WorkflowContext,
-  GitError 
 } from '../types/index.js'
+import process from 'node:process'
+import { execa } from 'execa'
+import { simpleGit } from 'simple-git'
 
 export class GitStore {
   private git: SimpleGit
-  
+
   constructor(private workingDir: string = process.cwd()) {
     this.git = simpleGit(workingDir)
   }
@@ -27,7 +28,8 @@ export class GitStore {
     try {
       await this.git.status()
       return true
-    } catch {
+    }
+    catch {
       return false
     }
   }
@@ -36,7 +38,8 @@ export class GitStore {
     try {
       const status = await this.git.status()
       return status.current || 'main'
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get current branch', error)
     }
   }
@@ -46,7 +49,8 @@ export class GitStore {
       const remotes = await this.git.getRemotes(true)
       const origin = remotes.find(remote => remote.name === 'origin')
       return origin?.refs?.push || ''
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get remote URL', error)
     }
   }
@@ -65,7 +69,8 @@ export class GitStore {
     try {
       const status = await this.git.status()
       return status.files.length > 0
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to check uncommitted changes', error)
     }
   }
@@ -74,7 +79,8 @@ export class GitStore {
     try {
       const status = await this.git.status()
       return status.files.map(file => file.path)
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get changed files', error)
     }
   }
@@ -83,7 +89,8 @@ export class GitStore {
     try {
       const status = await this.git.status()
       return status.staged
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get staged files', error)
     }
   }
@@ -99,10 +106,11 @@ export class GitStore {
         to: 'HEAD',
         maxCount: limit,
       }
-      
+
       const log = await this.git.log(options)
       return log.all.map(commit => this.parseCommit(commit))
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get commits', error)
     }
   }
@@ -112,14 +120,15 @@ export class GitStore {
       // Get latest tag
       const tags = await this.git.tags(['--sort=-version:refname', '--merged'])
       const latestTag = tags.all.find(tag => tag.match(new RegExp(tagPattern.replace('*', '.*'))))
-      
+
       if (!latestTag) {
         // No tags, get all commits
         return this.getCommits()
       }
-      
+
       return this.getCommits(latestTag)
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get commits since tag', error)
     }
   }
@@ -127,7 +136,7 @@ export class GitStore {
   private parseCommit(commit: any): CommitInfo {
     const message = commit.message
     const conventionalMatch = message.match(/^(\w+)(?:\(([^)]+)\))?(!)?: (.+)$/)
-    
+
     return {
       hash: commit.hash,
       message: commit.message,
@@ -146,23 +155,24 @@ export class GitStore {
   async createBranch(options: BranchOptions): Promise<string> {
     try {
       let branchName = options.name
-      
+
       if (!branchName && options.autoSuggest) {
         branchName = await this.suggestBranchName(options.type)
       }
-      
+
       if (!branchName) {
         throw new Error('Branch name is required')
       }
 
       // Format branch name according to convention
       const formattedName = this.formatBranchName(options.type, branchName)
-      
+
       // Create and checkout branch
       await this.git.checkoutBranch(formattedName, options.baseBranch || 'main')
-      
+
       return formattedName
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to create ${options.type} branch`, error)
     }
   }
@@ -170,7 +180,8 @@ export class GitStore {
   async switchBranch(branchName: string): Promise<void> {
     try {
       await this.git.checkout(branchName)
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to switch to branch: ${branchName}`, error)
     }
   }
@@ -179,7 +190,8 @@ export class GitStore {
     try {
       const flag = force ? '-D' : '-d'
       await this.git.branch([flag, branchName])
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to delete branch: ${branchName}`, error)
     }
   }
@@ -188,7 +200,8 @@ export class GitStore {
     try {
       const branches = await this.git.branchLocal()
       return branches.all
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to get branches', error)
     }
   }
@@ -199,7 +212,7 @@ export class GitStore {
       .replace(/[^a-z0-9-]/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
-    
+
     return `${type}/${cleanName}`
   }
 
@@ -212,13 +225,14 @@ export class GitStore {
       // Get recent commits to understand current work
       const recentCommits = await this.getCommits(undefined, 5)
       const changedFiles = await this.getChangedFiles()
-      
+
       // For now, create a simple suggestion based on changed files
       // In a real implementation, you'd call your AI service here
       const suggestion = this.generateBranchSuggestion(type, changedFiles, recentCommits)
-      
+
       return suggestion
-    } catch (error) {
+    }
+    catch {
       // Fallback to timestamp-based name
       return `${type}-${Date.now()}`
     }
@@ -228,16 +242,17 @@ export class GitStore {
     try {
       const changedFiles = await this.getChangedFiles()
       const status = await this.git.status()
-      
+
       // Simple heuristic-based suggestion
       // In production, integrate with your AI service
       return this.generateCommitSuggestion(changedFiles, status)
-    } catch {
+    }
+    catch {
       return 'chore: update files'
     }
   }
 
-  private generateBranchSuggestion(type: string, files: string[], commits: CommitInfo[]): string {
+  private generateBranchSuggestion(type: string, files: string[], _commits: CommitInfo[]): string {
     // Simple heuristics - replace with AI call
     if (files.some(f => f.includes('test'))) {
       return 'improve-testing'
@@ -251,7 +266,7 @@ export class GitStore {
     return 'feature-enhancement'
   }
 
-  private generateCommitSuggestion(files: string[], status: any): string {
+  private generateCommitSuggestion(files: string[], _status: any): string {
     // Simple heuristics - replace with AI call
     if (files.some(f => f.includes('test'))) {
       return 'test: improve test coverage'
@@ -273,10 +288,12 @@ export class GitStore {
     try {
       if (files) {
         await this.git.add(files)
-      } else {
+      }
+      else {
         await this.git.add('.')
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to stage files', error)
     }
   }
@@ -285,7 +302,8 @@ export class GitStore {
     try {
       const result = await this.git.commit(message)
       return result.commit
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to commit changes', error)
     }
   }
@@ -294,7 +312,8 @@ export class GitStore {
     try {
       const currentBranch = branch || await this.getCurrentBranch()
       await this.git.push(remote, currentBranch)
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to push changes', error)
     }
   }
@@ -303,10 +322,12 @@ export class GitStore {
     try {
       if (message) {
         await this.git.addAnnotatedTag(tagName, message)
-      } else {
+      }
+      else {
         await this.git.addTag(tagName)
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to create tag: ${tagName}`, error)
     }
   }
@@ -314,7 +335,8 @@ export class GitStore {
   async pushTags(remote = 'origin'): Promise<void> {
     try {
       await this.git.pushTags(remote)
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to push tags', error)
     }
   }
@@ -327,11 +349,14 @@ export class GitStore {
     try {
       const currentBranch = await this.getCurrentBranch()
       const title = options.title || `${currentBranch}: Ready for review`
-      
+
       const args = [
-        'pr', 'create',
-        '--title', title,
-        '--body', options.body || '',
+        'pr',
+        'create',
+        '--title',
+        title,
+        '--body',
+        options.body || '',
       ]
 
       if (options.labels?.length) {
@@ -355,7 +380,8 @@ export class GitStore {
       }
 
       return prUrl
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError('Failed to create pull request', error)
     }
   }
@@ -363,7 +389,8 @@ export class GitStore {
   async mergePullRequest(prNumber: string, method = 'squash'): Promise<void> {
     try {
       await execa('gh', ['pr', 'merge', prNumber, `--${method}`])
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to merge PR #${prNumber}`, error)
     }
   }
@@ -371,7 +398,8 @@ export class GitStore {
   async closePullRequest(prNumber: string): Promise<void> {
     try {
       await execa('gh', ['pr', 'close', prNumber])
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to close PR #${prNumber}`, error)
     }
   }
@@ -383,23 +411,25 @@ export class GitStore {
   async getCurrentVersion(): Promise<string> {
     try {
       const packageJson = await import(`${this.workingDir}/package.json`, {
-        assert: { type: 'json' }
+        assert: { type: 'json' },
       })
       return packageJson.default.version || '0.0.0'
-    } catch {
+    }
+    catch {
       return '0.0.0'
     }
   }
 
   async updatePackageVersion(newVersion: string): Promise<void> {
     try {
-      const fs = await import('fs/promises')
+      const fs = await import('node:fs/promises')
       const packagePath = `${this.workingDir}/package.json`
       const packageJson = JSON.parse(await fs.readFile(packagePath, 'utf-8'))
-      
+
       packageJson.version = newVersion
-      await fs.writeFile(packagePath, JSON.stringify(packageJson, null, 2) + '\n')
-    } catch (error) {
+      await fs.writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`)
+    }
+    catch (error) {
       throw this.createGitError('Failed to update package version', error)
     }
   }
@@ -412,22 +442,24 @@ export class GitStore {
     try {
       // Switch to main branch
       await this.switchBranch('main')
-      
+
       // Pull latest changes
       await this.git.pull('origin', 'main')
-      
+
       // Delete feature branch if requested
       if (deleteBranch) {
         await this.deleteBranch(branchName)
-        
+
         // Delete remote branch
         try {
           await this.git.push('origin', branchName, ['--delete'])
-        } catch {
+        }
+        catch {
           // Ignore if remote branch doesn't exist
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       throw this.createGitError(`Failed to cleanup branch: ${branchName}`, error)
     }
   }

@@ -1,36 +1,36 @@
 /**
  * go-workflow V2 - Enterprise Release Automation
- * 
+ *
  * Main library exports for programmatic usage
  */
 
+export { createGitStore, GitStore } from './core/git-store.js'
 // Core exports
-export { TaskEngine, createTaskEngine } from './core/task-engine.js'
-export { GitStore, createGitStore } from './core/git-store.js'
-
-// Workflow exports
-export { createReleaseWorkflow } from './workflows/release.js'
+export { createTaskEngine, TaskEngine } from './core/task-engine.js'
 
 // Type exports
 export type {
-  WorkflowContext,
-  WorkflowStep,
-  TaskHelpers,
-  TaskEngineOptions,
-  ReleaseOptions,
-  FeatureOptions,
-  CommitInfo,
   BranchOptions,
-  PullRequestOptions,
-  WorkflowConfig,
   CloudflareDeployment,
-  NpmDeployment,
-  CustomDeployment,
-  WorkflowError,
-  GitError,
+  CommitInfo,
   ConfigError,
-  DeploymentError
+  CustomDeployment,
+  DeploymentError,
+  FeatureOptions,
+  GitError,
+  NpmDeployment,
+  PullRequestOptions,
+  ReleaseOptions,
+  TaskEngineOptions,
+  TaskHelpers,
+  WorkflowConfig,
+  WorkflowContext,
+  WorkflowError,
+  WorkflowStep,
 } from './types/index.js'
+
+// Workflow exports
+export { createReleaseWorkflow } from './workflows/release.js'
 
 /**
  * Quick release function for simple usage
@@ -41,7 +41,7 @@ export async function quickRelease(options: import('./types/index.js').ReleaseOp
 
   const steps = createReleaseWorkflow(options)
   const engine = createTaskEngine({
-    showTimer: true
+    showTimer: true,
   })
 
   return engine.execute(steps)
@@ -50,7 +50,7 @@ export async function quickRelease(options: import('./types/index.js').ReleaseOp
 /**
  * Create a new workflow builder
  */
-export function createWorkflow(name: string) {
+export function createWorkflow(_name: string) {
   const steps: import('./types/index.js').WorkflowStep[] = []
 
   return {
@@ -66,6 +66,6 @@ export function createWorkflow(name: string) {
 
     build() {
       return steps
-    }
+    },
   }
 }

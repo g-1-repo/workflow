@@ -67,7 +67,7 @@ Execute the complete release workflow:
 ```bash
 ✔ Quality Gates
   ✔ Auto-fix linting issues
-  ✔ Type checking  
+  ✔ Type checking
   ✔ Running tests
 ✔ Git repository analysis
 ✔ Version calculation
@@ -111,7 +111,7 @@ Show project and workflow status.
 Use as a library in your Node.js applications:
 
 ```typescript
-import { createTaskEngine, createReleaseWorkflow, quickRelease } from '@go-corp/workflow'
+import { createReleaseWorkflow, createTaskEngine, createWorkflow, quickRelease } from '@go-corp/workflow'
 
 // Quick release
 await quickRelease({ type: 'minor' })
@@ -121,9 +121,7 @@ const steps = createReleaseWorkflow({ skipTests: true })
 const engine = createTaskEngine()
 const result = await engine.execute(steps)
 
-// Build custom workflows  
-import { createWorkflow } from '@go-corp/workflow'
-
+// Build custom workflows
 const customWorkflow = createWorkflow('deploy')
   .step('Build', async (ctx, helpers) => {
     helpers.setOutput('Building application...')
@@ -146,7 +144,7 @@ export default {
     type: 'library', // 'library' | 'cli' | 'web-app' | 'api'
     packageManager: 'bun' // 'bun' | 'npm' | 'yarn' | 'pnpm'
   },
-  
+
   git: {
     defaultBranch: 'main',
     branchNaming: {
@@ -204,7 +202,7 @@ Enforces code quality before any release:
 
 ### **Flexible Deployment**
 - npm registry publishing
-- Cloudflare Workers/Pages deployment  
+- Cloudflare Workers/Pages deployment
 - GitHub releases with assets
 - Extensible for custom targets
 
