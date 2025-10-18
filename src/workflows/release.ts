@@ -309,9 +309,9 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
 
         // Instead of interactive prompt, show available options and require CLI flags
         const availableTargets = availableOptions.map(opt => `  - ${opt.message}`).join('\n')
-        
+
         const errorMessage = `Available deployment targets detected:\n${availableTargets}\n\nPlease specify deployment options:\n\n1. Skip all deployments: --skip-cloudflare --skip-npm\n2. Deploy only to npm: --skip-cloudflare\n3. Deploy only to Cloudflare: --skip-npm\n4. Deploy to both: (no flags needed)\n\nExample: bun run release --skip-cloudflare`
-        
+
         throw new Error(errorMessage)
       },
     },
