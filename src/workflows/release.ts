@@ -307,12 +307,26 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           return
         }
 
-        // Instead of interactive prompt, show available options and require CLI flags
-        const availableTargets = availableOptions.map(opt => `  - ${opt.message}`).join('\n')
+        // Intelligently configure deployments based on what's detected
+        // Only auto-configure if flags weren't explicitly set
+        if (options.skipCloudflare === undefined) {
+          options.skipCloudflare = !hasCloudflare
+        }
+        if (options.skipNpm === undefined) {
+          options.skipNpm = !hasNpmSetup
+        }
 
-        const errorMessage = `Available deployment targets detected:\n${availableTargets}\n\nPlease specify deployment options:\n\n1. Skip all deployments: --skip-cloudflare --skip-npm\n2. Deploy only to npm: --skip-cloudflare\n3. Deploy only to Cloudflare: --skip-npm\n4. Deploy to both: (no flags needed)\n\nExample: bun run release --skip-cloudflare`
+        const enabledTargets = []
+        if (!options.skipCloudflare && hasCloudflare)
+          enabledTargets.push('Cloudflare')
+        if (!options.skipNpm && hasNpmSetup)
+          enabledTargets.push('npm')
 
-        throw new Error(errorMessage)
+        const deploymentSummary = enabledTargets.length > 0
+          ? `Will deploy to: ${enabledTargets.join(', ')}`
+          : 'No deployments configured'
+
+        helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
       },
     },
 
