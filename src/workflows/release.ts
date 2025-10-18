@@ -307,26 +307,40 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           return
         }
 
-        // Intelligently configure deployments based on what's detected
-        // Only auto-configure if flags weren't explicitly set
+        // Safe by default - skip all deployments unless explicitly enabled via CLI flags
+        // Only use what's explicitly set via CLI flags
         if (options.skipCloudflare === undefined) {
-          options.skipCloudflare = !hasCloudflare
+          options.skipCloudflare = true // Default to skip
         }
         if (options.skipNpm === undefined) {
-          options.skipNpm = !hasNpmSetup
+          options.skipNpm = true // Default to skip
         }
 
         const enabledTargets = []
-        if (!options.skipCloudflare && hasCloudflare)
-          enabledTargets.push('Cloudflare')
-        if (!options.skipNpm && hasNpmSetup)
-          enabledTargets.push('npm')
+        const availableTargets = []
 
-        const deploymentSummary = enabledTargets.length > 0
-          ? `Will deploy to: ${enabledTargets.join(', ')}`
-          : 'No deployments configured'
+        if (hasCloudflare) {
+          availableTargets.push('Cloudflare')
+          if (!options.skipCloudflare)
+            enabledTargets.push('Cloudflare')
+        }
 
-        helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
+        if (hasNpmSetup) {
+          availableTargets.push('npm')
+          if (!options.skipNpm)
+            enabledTargets.push('npm')
+        }
+
+        if (enabledTargets.length > 0) {
+          const deploymentSummary = `Will deploy to: ${enabledTargets.join(', ')}`
+          helpers.setTitle(`Deployment configuration - ✅ ${deploymentSummary}`)
+        }
+        else {
+          const suggestion = availableTargets.length > 0
+            ? `Available: ${availableTargets.join(', ')}. Use CLI flags to enable.`
+            : 'No deployment options available.'
+          helpers.setTitle(`Deployment configuration - ⚠️ All deployments skipped. ${suggestion}`)
+        }
       },
     },
 
