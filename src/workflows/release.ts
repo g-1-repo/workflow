@@ -454,9 +454,11 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           const errorMessage = error instanceof Error ? error.message : String(error)
           if (errorMessage.includes('Missing entry-point')) {
             helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed: No wrangler config (continuing)')
-          } else if (errorMessage.includes('not authenticated')) {
+          }
+          else if (errorMessage.includes('not authenticated')) {
             helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed: Not authenticated (continuing)')
-          } else {
+          }
+          else {
             helpers.setTitle('Deploy to Cloudflare - ⚠️ Failed (continuing)')
           }
         }
@@ -489,9 +491,11 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           const errorMessage = error instanceof Error ? error.message : String(error)
           if (errorMessage.includes('401') || errorMessage.includes('not authenticated')) {
             helpers.setTitle('Publish to npm - ⚠️ Failed: Not authenticated (continuing)')
-          } else if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
+          }
+          else if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
             helpers.setTitle('Publish to npm - ⚠️ Failed: No permission (continuing)')
-          } else {
+          }
+          else {
             helpers.setTitle('Publish to npm - ⚠️ Failed (continuing)')
           }
         }
