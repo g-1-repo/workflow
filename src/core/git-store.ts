@@ -320,6 +320,12 @@ export class GitStore {
 
   async createTag(tagName: string, message?: string): Promise<void> {
     try {
+      // Check if tag already exists
+      const tags = await this.git.tags()
+      if (tags.all.includes(tagName)) {
+        throw new Error(`Tag ${tagName} already exists. Please use a different version or delete the existing tag.`)
+      }
+
       if (message) {
         await this.git.addAnnotatedTag(tagName, message)
       }
@@ -328,6 +334,10 @@ export class GitStore {
       }
     }
     catch (error) {
+      // If it's our custom error about existing tag, throw it as-is
+      if (error instanceof Error && error.message.includes('already exists')) {
+        throw error
+      }
       throw this.createGitError(`Failed to create tag: ${tagName}`, error)
     }
   }
@@ -410,6 +420,16 @@ export class GitStore {
 
   async getCurrentVersion(): Promise<string> {
     try {
+      // First try to get version from latest git tag
+      const tags = await this.git.tags(['--sort=-version:refname', '--merged'])
+      const latestTag = tags.all.find(tag => tag.match(/^v?\d+\.\d+\.\d+/))
+
+      if (latestTag) {
+        // Remove 'v' prefix if present
+        return latestTag.replace(/^v/, '')
+      }
+
+      // Fallback to package.json
       const packageJson = await import(`${this.workingDir}/package.json`, {
         assert: { type: 'json' },
       })
