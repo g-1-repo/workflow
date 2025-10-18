@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.8.2] - 2025-10-18
+
+### Bug Fixes
+
+- improve npm publish to prevent interactive prompts and handle auth failures
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.8.1] - 2025-10-18
 
 ### Other Changes
