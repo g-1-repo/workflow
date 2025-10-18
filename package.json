@@ -1,6 +1,6 @@
 {
   "name": "@go-corp/workflow",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Enterprise-ready release automation and workflow orchestration",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -34,7 +34,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build && npm run typecheck",
+    "prepublishOnly": "bun run clean && bun run build && bun run typecheck",
     "release": "node dist/cli.js release",
     "dev:cli": "tsup --watch && node dist/cli.js"
   },

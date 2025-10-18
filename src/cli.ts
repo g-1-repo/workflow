@@ -11,7 +11,7 @@ import { createReleaseWorkflow } from './workflows/release.js'
 import type { ReleaseOptions } from './types/index.js'
 
 // Version from package.json
-const version = '2.0.0'
+const version = '2.0.1'
 
 program
   .name('go-workflow')

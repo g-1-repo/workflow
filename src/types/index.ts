@@ -143,7 +143,7 @@ export interface WorkflowConfig {
   project: {
     name: string
     type: 'library' | 'cli' | 'web-app' | 'api'
-    packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun'
+    packageManager: 'bun' | 'npm' | 'yarn' | 'pnpm'
   }
 
   // Git settings

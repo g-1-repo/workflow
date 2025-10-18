@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2024-10-18
+
+### 🚀 Bun-First Updates
+
+- **Prefer bun**: All commands now try bun first, then fallback to npm
+- **Package Manager**: Updated default package manager preference to bun
+- **Installation**: README now shows bun as the recommended installation method
+- **Workflow**: Release workflow uses `bun run`, `bun test`, `bun publish` by default
+- **Documentation**: Updated all examples to show bun-first approach
+
 ## [2.0.0] - 2024-10-18
 
 ### ✨ Major Release - Complete Rewrite

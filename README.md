@@ -32,11 +32,14 @@ A powerful, type-safe CLI tool built for modern development teams that need cons
 ### Installation
 
 ```bash
-# Install globally
-npm install -g @go-corp/workflow
+# Install globally (recommended)
+bun install -g @go-corp/workflow
 
 # Or use in project
-npm install --save-dev @go-corp/workflow
+bun add --dev @go-corp/workflow
+
+# Also available via npm/yarn/pnpm
+npm install -g @go-corp/workflow
 ```
 
 ### Basic Usage
@@ -141,7 +144,7 @@ Create `.go-workflow.config.js` in your project root:
 export default {
   project: {
     type: 'library', // 'library' | 'cli' | 'web-app' | 'api'
-    packageManager: 'npm' // 'npm' | 'yarn' | 'pnpm' | 'bun'
+    packageManager: 'bun' // 'bun' | 'npm' | 'yarn' | 'pnpm'
   },
   
   git: {

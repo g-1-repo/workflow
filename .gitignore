@@ -45,6 +45,7 @@ coverage/
 .npm/
 .yarn/
 .pnpm-store/
+bun.lockb
 
 # Testing
 .coverage/

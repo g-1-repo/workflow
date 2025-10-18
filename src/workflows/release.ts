@@ -20,15 +20,21 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
             helpers.setOutput('Running lint with auto-fix...')
             
             try {
-              await execa('npm', ['run', 'lint:fix'], { stdio: 'pipe' })
+              await execa('bun', ['run', 'lint:fix'], { stdio: 'pipe' })
               helpers.setTitle('Auto-fix linting issues - ✅ Fixed')
             } catch (error) {
-              // Try alternative commands
+              // Try npm fallback
               try {
-                await execa('npx', ['eslint', '.', '--fix'], { stdio: 'pipe' })
-                helpers.setTitle('Auto-fix linting issues - ✅ Fixed with eslint')
+                await execa('npm', ['run', 'lint:fix'], { stdio: 'pipe' })
+                helpers.setTitle('Auto-fix linting issues - ✅ Fixed with npm')
               } catch {
-                helpers.setTitle('Auto-fix linting issues - ⚠️ No lint command found')
+                // Try direct eslint
+                try {
+                  await execa('bunx', ['eslint', '.', '--fix'], { stdio: 'pipe' })
+                  helpers.setTitle('Auto-fix linting issues - ✅ Fixed with bunx')
+                } catch {
+                  helpers.setTitle('Auto-fix linting issues - ⚠️ No lint command found')
+                }
               }
             }
           }
@@ -39,14 +45,19 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
             helpers.setOutput('Running TypeScript type checking...')
             
             try {
-              await execa('npm', ['run', 'typecheck'], { stdio: 'pipe' })
+              await execa('bun', ['run', 'typecheck'], { stdio: 'pipe' })
               helpers.setTitle('Type checking - ✅ Passed')
             } catch (error) {
               try {
-                await execa('npx', ['tsc', '--noEmit'], { stdio: 'pipe' })
-                helpers.setTitle('Type checking - ✅ Passed')
+                await execa('npm', ['run', 'typecheck'], { stdio: 'pipe' })
+                helpers.setTitle('Type checking - ✅ Passed with npm')
               } catch {
-                throw new Error('TypeScript errors found. Please fix before releasing.')
+                try {
+                  await execa('bunx', ['tsc', '--noEmit'], { stdio: 'pipe' })
+                  helpers.setTitle('Type checking - ✅ Passed with bunx')
+                } catch {
+                  throw new Error('TypeScript errors found. Please fix before releasing.')
+                }
               }
             }
           }
@@ -58,12 +69,19 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
             helpers.setOutput('Executing test suite...')
             
             try {
-              const result = await execa('npm', ['test'], { stdio: 'pipe' })
+              const result = await execa('bun', ['test'], { stdio: 'pipe' })
               ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
               helpers.setTitle('Running tests - ✅ All tests passed')
             } catch (error) {
-              ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
-              throw new Error('Tests failed. Cannot proceed with release.')
+              // Try npm fallback
+              try {
+                await execa('npm', ['test'], { stdio: 'pipe' })
+                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
+                helpers.setTitle('Running tests - ✅ All tests passed with npm')
+              } catch {
+                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
+                throw new Error('Tests failed. Cannot proceed with release.')
+              }
             }
           }
         }
@@ -247,10 +265,16 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         helpers.setOutput('Building project for deployment...')
         
         try {
-          await execa('npm', ['run', 'build'], { stdio: 'pipe' })
+          await execa('bun', ['run', 'build'], { stdio: 'pipe' })
           helpers.setTitle('Build project - ✅ Build complete')
         } catch (error) {
-          throw new Error('Build failed. Cannot proceed with deployment.')
+          // Try npm fallback
+          try {
+            await execa('npm', ['run', 'build'], { stdio: 'pipe' })
+            helpers.setTitle('Build project - ✅ Build complete with npm')
+          } catch {
+            throw new Error('Build failed. Cannot proceed with deployment.')
+          }
         }
       }
     },
@@ -292,7 +316,7 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         helpers.setOutput('Publishing to npm registry...')
         
         try {
-          await execa('npm', ['publish', '--access', 'public'], { stdio: 'pipe' })
+          await execa('bun', ['publish', '--access', 'public'], { stdio: 'pipe' })
           
           ctx.deployments = {
             ...ctx.deployments,
