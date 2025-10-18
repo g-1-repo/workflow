@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.1] - 2025-10-18
+
+### Other Changes
+
+- simplify: remove authentication checks and OTP handling from upfront configuration
+
+
 ## [2.8.0] - 2025-10-18
 
 ### Features
