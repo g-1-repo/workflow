@@ -63,6 +63,27 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       }) as { publishToNpm: boolean }
 
       options.skipNpm = !response.publishToNpm
+
+      // If user wants to publish to npm, verify auth immediately
+      if (response.publishToNpm) {
+        process.stdout.write('Checking npm authentication...\n')
+        try {
+          const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
+          if (result.stdout.trim()) {
+            process.stdout.write(`✅ Authenticated as: ${result.stdout.trim()}\n`)
+          }
+          else {
+            process.stdout.write('❌ Not authenticated to npm\n')
+            process.stdout.write('Please run: npm login\n')
+            process.exit(1)
+          }
+        }
+        catch {
+          process.stdout.write('❌ Not authenticated to npm\n')
+          process.stdout.write('Please run: npm login\n')
+          process.exit(1)
+        }
+      }
     }
 
     if (hasCloudflare && options.skipCloudflare === undefined) {
@@ -75,6 +96,26 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
+
+      // If user wants to deploy to Cloudflare, verify auth immediately
+      if (response.deployToCloudflare) {
+        process.stdout.write('Checking Cloudflare authentication...\n')
+        try {
+          await execa('bunx', ['wrangler', 'whoami'], { stdio: 'pipe' })
+          process.stdout.write('✅ Authenticated to Cloudflare\n')
+        }
+        catch {
+          try {
+            await execa('npx', ['wrangler', 'whoami'], { stdio: 'pipe' })
+            process.stdout.write('✅ Authenticated to Cloudflare\n')
+          }
+          catch {
+            process.stdout.write('❌ Not authenticated to Cloudflare\n')
+            process.stdout.write('Please run: bunx wrangler login\n')
+            process.exit(1)
+          }
+        }
+      }
     }
 
     // Set defaults for anything not detected
@@ -93,51 +134,6 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   }
 
   return [
-    // Authentication checks (if deployments are enabled)
-    {
-      title: 'Authentication verification',
-      skip: () => (options.skipNpm && options.skipCloudflare) || false,
-      task: async (ctx, helpers) => {
-        const checks = []
-
-        if (!options.skipNpm) {
-          helpers.setOutput('Checking npm authentication...')
-          try {
-            const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
-            if (result.stdout.trim()) {
-              checks.push(`npm: ${result.stdout.trim()}`)
-            }
-            else {
-              throw new Error('npm authentication required. Run: npm login')
-            }
-          }
-          catch {
-            throw new Error('npm authentication required. Run: npm login')
-          }
-        }
-
-        if (!options.skipCloudflare) {
-          helpers.setOutput('Checking Cloudflare authentication...')
-          try {
-            await execa('bunx', ['wrangler', 'whoami'], { stdio: 'pipe' })
-            checks.push('Cloudflare: authenticated')
-          }
-          catch {
-            try {
-              await execa('npx', ['wrangler', 'whoami'], { stdio: 'pipe' })
-              checks.push('Cloudflare: authenticated')
-            }
-            catch {
-              throw new Error('Cloudflare authentication required. Run: bunx wrangler login')
-            }
-          }
-        }
-
-        const summary = checks.length > 0 ? checks.join(', ') : 'No authentication needed'
-        helpers.setTitle(`Authentication verification - ✅ ${summary}`)
-      },
-    },
-
     // Quality Gates
     {
       title: 'Quality Gates',
