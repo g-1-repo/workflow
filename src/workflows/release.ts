@@ -71,14 +71,15 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
           if (result.stdout.trim()) {
             process.stdout.write(`✅ Authenticated as: ${result.stdout.trim()}\n`)
-            
+
             // Check if 2FA is required and prompt for OTP upfront
             process.stdout.write('Checking if 2FA/OTP is required...\n')
             try {
               // Try a dry-run publish to see if OTP is needed
               await execa('npm', ['publish', '--dry-run'], { stdio: 'pipe' })
               process.stdout.write('✅ No OTP required\n')
-            } catch (dryRunError) {
+            }
+            catch (dryRunError) {
               const errorOutput = dryRunError instanceof Error ? dryRunError.message : String(dryRunError)
               if (errorOutput.includes('one-time pass') || errorOutput.includes('OTP') || errorOutput.includes('two-factor')) {
                 // Prompt for OTP upfront
@@ -87,21 +88,24 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
                   type: 'input',
                   name: 'otp',
                   message: '🔒 Enter your npm One-Time Password (OTP):',
-                  validate: (value: string) => value.length === 6 || 'OTP must be 6 digits'
+                  validate: (value: string) => value.length === 6 || 'OTP must be 6 digits',
                 }) as { otp: string }
-                
+
                 // Store OTP for later use in workflow context
-                if (!options.npmConfig) options.npmConfig = {}
+                if (!options.npmConfig)
+                  options.npmConfig = {}
                 options.npmConfig.otp = otpResponse.otp
                 process.stdout.write('✅ OTP captured for publishing\n')
               }
             }
-          } else {
+          }
+          else {
             process.stdout.write('❌ Not authenticated to npm\n')
             process.stdout.write('Please run: npm login\n')
             process.exit(1)
           }
-        } catch {
+        }
+        catch {
           process.stdout.write('❌ Not authenticated to npm\n')
           process.stdout.write('Please run: npm login\n')
           process.exit(1)
@@ -149,7 +153,64 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
 
     process.stdout.write('\n')
   }
-
+  
+  // Handle uncommitted changes upfront (before workflow starts)
+  if (!options.force) {
+    const git = createGitStore()
+    const hasChanges = await git.hasUncommittedChanges()
+    
+    if (hasChanges) {
+      const changedFiles = await git.getChangedFiles()
+      const changesList = changedFiles.map(file => `  - ${file}`).join('\n')
+      
+      process.stdout.write(`\n⚠️  Uncommitted changes detected:\n${changesList}\n\n`)
+      
+      if (!options.nonInteractive) {
+        const enquirer = await import('enquirer')
+        const response = await enquirer.default.prompt({
+          type: 'select',
+          name: 'action',
+          message: 'How would you like to handle uncommitted changes?',
+          choices: [
+            { name: 'commit', message: '📝 Commit all changes now', value: 'commit' },
+            { name: 'stash', message: '📦 Stash changes for later', value: 'stash' },
+            { name: 'force', message: '⚠️  Continue anyway (--force)', value: 'force' }
+          ]
+        }) as { action: 'commit' | 'stash' | 'force' }
+        
+        if (response.action === 'commit') {
+          // Get commit message
+          const commitResponse = await enquirer.default.prompt({
+            type: 'input',
+            name: 'message',
+            message: '💬 Enter commit message:',
+            initial: 'chore: commit changes before release'
+          }) as { message: string }
+          
+          // Commit changes
+          await git.stageFiles(changedFiles)
+          await git.commit(commitResponse.message)
+          process.stdout.write('✅ Changes committed\n')
+        } else if (response.action === 'stash') {
+          // Stash changes
+          await execa('git', ['stash', 'push', '-m', 'Pre-release stash'], { stdio: 'pipe' })
+          process.stdout.write('✅ Changes stashed\n')
+        } else if (response.action === 'force') {
+          // Continue with force
+          options.force = true
+          process.stdout.write('⚠️  Continuing with uncommitted changes\n')
+        }
+        
+        process.stdout.write('\n')
+      } else {
+        // Non-interactive mode - just show error and exit
+        process.stdout.write('❌ Cannot proceed with uncommitted changes in non-interactive mode\n')
+        process.stdout.write('Use --force flag to override or commit/stash changes first\n')
+        process.exit(1)
+      }
+    }
+  }
+  
   // Set defaults for non-interactive mode
   if (options.nonInteractive && options.skipCloudflare === undefined && options.skipNpm === undefined) {
     options.skipCloudflare = true
@@ -294,20 +355,10 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         const currentVersion = await git.getCurrentVersion()
         const repository = await git.getRepositoryName()
 
-        helpers.setOutput('Checking for uncommitted changes...')
+        // Uncommitted changes are now handled upfront before workflow starts
         const hasChanges = await git.hasUncommittedChanges()
-
-        if (hasChanges && !options.force) {
-          // Show the actual uncommitted changes
-          const changedFiles = await git.getChangedFiles()
-          const changesList = changedFiles.map(file => `  - ${file}`).join('\n')
-
-          const errorMessage = `Uncommitted changes detected in:\n${changesList}\n\nPlease choose one of the following options:\n\n1. Commit changes: git add . && git commit -m "your message"\n2. Stash changes: git stash\n3. Skip check: add --force flag\n\nExample: bun run release --force`
-
-          throw new Error(errorMessage)
-        }
-        else if (hasChanges && options.force) {
-          helpers.setOutput('⚠️  Uncommitted changes detected but skipped due to --force flag')
+        if (hasChanges && options.force) {
+          helpers.setOutput('⚠️  Uncommitted changes detected but continuing due to --force flag')
         }
 
         // Store git info in context
@@ -555,15 +606,15 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             'public',
             '--non-interactive',
             '--no-git-checks',
-            '--verbose'
+            '--verbose',
           ]
-          
+
           // Add OTP if captured during initial configuration
           if (options.npmConfig?.otp) {
             publishArgs.push('--otp', options.npmConfig.otp)
             helpers.setOutput(`Publishing with OTP: ${options.npmConfig.otp}...`)
           }
-          
+
           const publishResult = await execa('npm', publishArgs, {
             stdio: 'pipe',
             timeout: 60000, // 60 second timeout
