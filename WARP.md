@@ -61,7 +61,7 @@ This is an enterprise-grade TypeScript workflow automation tool with a modular a
 
 **Enterprise Features**
 - Quality gates enforced before any release (lint, typecheck, tests)
-- Multi-platform deployment (npm, Cloudflare, GitHub releases)  
+- Multi-platform deployment (npm, Cloudflare, GitHub releases)
 - Fallback strategy: bun → npm → direct tools (bunx/npx)
 - Interactive workflow with upfront configuration
 - Crash-proof execution with error resilience

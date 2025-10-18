@@ -143,8 +143,8 @@ import { createReleaseWorkflow, createTaskEngine, createWorkflow, quickRelease }
 await quickRelease({ type: 'minor' })
 
 // Custom workflow (note: createReleaseWorkflow is now async)
-const steps = await createReleaseWorkflow({ 
-  skipTests: true, 
+const steps = await createReleaseWorkflow({
+  skipTests: true,
   nonInteractive: true, // Skip prompts for programmatic use
   skipCloudflare: true,
   skipNpm: true

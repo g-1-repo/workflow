@@ -218,55 +218,66 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           task: async (ctx, helpers) => {
             helpers.setOutput('Executing test suite...')
 
-            try {
-              const _result = await execa('bun', ['test'], { stdio: 'pipe' })
-              ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
-              helpers.setTitle('Running tests - ✅ All tests passed')
-            }
-            catch (error) {
-              const errorOutput = error instanceof Error ? error.message : String(error)
+            // Define test command priority order
+            const testCommands: Array<[string, string[]]> = [
+              ['bun', ['run', 'test:ci']], // CI test command (preferred)
+              ['bun', ['run', 'test']],    // Standard test command
+              ['bun', ['test']],           // Direct bun test
+              ['npm', ['run', 'test:ci']], // npm CI fallback
+              ['npm', ['run', 'test']],    // npm standard fallback
+              ['npm', ['test']],           // npm direct fallback
+            ]
 
-              // Check if it's a "no tests found" error
-              if (errorOutput.includes('No tests found') || errorOutput.includes('no test files')) {
-                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
-                helpers.setTitle('Running tests - ✅ No tests found (skipping)')
-                return
-              }
+            let lastError: any = null
 
-              // If it's a test failure, extract useful information
-              if (errorOutput.includes('fail') && errorOutput.includes('pass')) {
-                const lines = errorOutput.split('\n')
-                const summary = lines.find(line => line.includes('fail') && line.includes('pass')) || 'Tests failed'
-                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
-                throw new Error(`Test failures detected: ${summary}`)
-              }
-
-              // Try npm fallback for other errors
+            for (const [command, args] of testCommands) {
               try {
-                await execa('npm', ['test'], { stdio: 'pipe' })
+                helpers.setOutput(`Trying ${command} ${args.join(' ')}...`)
+                const _result = await execa(command, args, { stdio: 'pipe' })
                 ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
-                helpers.setTitle('Running tests - ✅ All tests passed with npm')
+                helpers.setTitle(`Running tests - ✅ All tests passed (${command})`)
+                return // Success! Exit early
               }
-              catch (npmError) {
-                const npmErrorOutput = npmError instanceof Error ? npmError.message : String(npmError)
-
-                // Check npm error for "no tests found" as well
-                if (npmErrorOutput.includes('No tests found') || npmErrorOutput.includes('no test files')) {
-                  ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
-                  helpers.setTitle('Running tests - ✅ No tests found (skipping)')
-                  return
+              catch (error) {
+                const errorOutput = error instanceof Error ? error.message : String(error)
+                
+                // Check if it's a "no tests found" or "script not found" error
+                if (errorOutput.includes('No tests found') || 
+                    errorOutput.includes('no test files') ||
+                    errorOutput.includes('script not found') ||
+                    errorOutput.includes('Missing script')) {
+                  // Try next command
+                  lastError = error
+                  continue
                 }
 
-                ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
-                // Extract useful test failure info
-                if (npmErrorOutput.includes('fail') && npmErrorOutput.includes('pass')) {
-                  const lines = npmErrorOutput.split('\n')
-                  const summary = lines.find(line => line.includes('fail') && line.includes('pass')) || 'Tests failed'
+                // If it's a real test failure (not a missing script), stop trying
+                if (errorOutput.includes('fail') || errorOutput.includes('Test')) {
+                  const lines = errorOutput.split('\n')
+                  const summary = lines.find(line => line.includes('fail')) || 'Tests failed'
+                  ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
                   throw new Error(`Test failures detected: ${summary}`)
                 }
-                throw new Error(`Tests failed: ${npmErrorOutput}`)
+
+                // Store error and try next command
+                lastError = error
               }
             }
+
+            // If we get here, all commands failed - check if it's because no tests exist
+            const lastErrorOutput = lastError instanceof Error ? lastError.message : String(lastError)
+            if (lastErrorOutput.includes('No tests found') || 
+                lastErrorOutput.includes('no test files') ||
+                lastErrorOutput.includes('script not found') ||
+                lastErrorOutput.includes('Missing script')) {
+              ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
+              helpers.setTitle('Running tests - ✅ No tests found (skipping)')
+              return
+            }
+
+            // Real test failure
+            ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: false }
+            throw new Error(`Tests failed: ${lastErrorOutput}`)
           },
         },
       ],
@@ -469,20 +480,50 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       task: async (ctx, helpers) => {
         helpers.setOutput('Building project for deployment...')
 
-        try {
-          await execa('bun', ['run', 'build'], { stdio: 'pipe' })
-          helpers.setTitle('Build project - ✅ Build complete')
-        }
-        catch {
-          // Try npm fallback
+        const buildCommands: Array<[string, string[]]> = [
+          ['bun', ['run', 'build']],
+          ['npm', ['run', 'build']],
+        ]
+
+        let lastError: any = null
+
+        for (const [command, args] of buildCommands) {
           try {
-            await execa('npm', ['run', 'build'], { stdio: 'pipe' })
-            helpers.setTitle('Build project - ✅ Build complete with npm')
+            helpers.setOutput(`Trying ${command} ${args.join(' ')}...`)
+            await execa(command, args, { stdio: 'pipe' })
+            helpers.setTitle(`Build project - ✅ Build complete (${command})`)
+            return // Success! Exit early
           }
-          catch {
-            throw new Error('Build failed. Cannot proceed with deployment.')
+          catch (error) {
+            const errorOutput = error instanceof Error ? error.message : String(error)
+            
+            // Check if it's a missing script error
+            if (errorOutput.includes('script not found') || 
+                errorOutput.includes('Missing script') ||
+                errorOutput.includes('npm ERR! missing script') ||
+                errorOutput.includes('Script not found')) {
+              lastError = error
+              continue
+            }
+
+            // Real build error - don't continue
+            throw new Error(`Build failed: ${errorOutput}`)
           }
         }
+
+        // If we get here, build script wasn't found - that's okay for some projects
+        if (lastError) {
+          const lastErrorOutput = lastError instanceof Error ? lastError.message : String(lastError)
+          if (lastErrorOutput.includes('script not found') || 
+              lastErrorOutput.includes('Missing script') ||
+              lastErrorOutput.includes('npm ERR! missing script') ||
+              lastErrorOutput.includes('Script not found')) {
+            helpers.setTitle('Build project - ✅ No build script found (skipping)')
+            return
+          }
+        }
+
+        throw new Error('Build failed. Cannot proceed with deployment.')
       },
     },
 
