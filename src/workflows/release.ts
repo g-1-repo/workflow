@@ -49,7 +49,7 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
     options.skipCloudflare = true
     options.skipNpm = true
   }
-  
+
   return [
     // Quality Gates First
     {
@@ -276,7 +276,6 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           helpers.setTitle('Deployment configuration - ✅ Using CLI options')
           return
         }
-
 
         helpers.setOutput('Detecting available deployment options...')
 
