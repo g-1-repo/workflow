@@ -93,7 +93,48 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   }
 
   return [
-    // Quality Gates First
+    // Authentication checks (if deployments are enabled)
+    {
+      title: 'Authentication verification',
+      skip: () => (options.skipNpm && options.skipCloudflare) || false,
+      task: async (ctx, helpers) => {
+        const checks = []
+        
+        if (!options.skipNpm) {
+          helpers.setOutput('Checking npm authentication...')
+          try {
+            const result = await execa('npm', ['whoami'], { stdio: 'pipe' })
+            if (result.stdout.trim()) {
+              checks.push(`npm: ${result.stdout.trim()}`)
+            } else {
+              throw new Error('npm authentication required. Run: npm login')
+            }
+          } catch {
+            throw new Error('npm authentication required. Run: npm login')
+          }
+        }
+        
+        if (!options.skipCloudflare) {
+          helpers.setOutput('Checking Cloudflare authentication...')
+          try {
+            await execa('bunx', ['wrangler', 'whoami'], { stdio: 'pipe' })
+            checks.push('Cloudflare: authenticated')
+          } catch {
+            try {
+              await execa('npx', ['wrangler', 'whoami'], { stdio: 'pipe' })
+              checks.push('Cloudflare: authenticated')
+            } catch {
+              throw new Error('Cloudflare authentication required. Run: bunx wrangler login')
+            }
+          }
+        }
+        
+        const summary = checks.length > 0 ? checks.join(', ') : 'No authentication needed'
+        helpers.setTitle(`Authentication verification - ✅ ${summary}`)
+      },
+    },
+
+    // Quality Gates
     {
       title: 'Quality Gates',
       subtasks: [
@@ -484,14 +525,24 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         helpers.setOutput('Publishing to npm registry...')
 
         try {
-          await execa('bun', ['publish', '--access', 'public'], { stdio: 'pipe' })
+          // Use npm with non-interactive flags to prevent hanging
+          const publishResult = await execa('npm', [
+            'publish',
+            '--access', 'public',
+            '--non-interactive',
+            '--no-git-checks',
+            '--verbose'
+          ], { 
+            stdio: 'pipe',
+            timeout: 60000 // 60 second timeout
+          })
 
           ctx.deployments = {
             ...ctx.deployments,
             npm: {
               registry: 'https://registry.npmjs.org',
               tag: 'latest',
-              access: 'public',
+              access: 'public'
             },
           }
 
