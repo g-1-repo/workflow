@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1] - 2025-10-18
+
+### Other Changes
+
+- docs: comprehensive update for v2.11.0 stable release
+
+
 ## [2.11.0] - 2025-10-18
 
 ### Bug Fixes
