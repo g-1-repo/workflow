@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.8.0] - 2025-10-18
+
+### Features
+
+- add upfront uncommitted changes handling to prevent crashes
+- comprehensive OTP handling for npm publish to prevent freezing
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.7.0] - 2025-10-18
 
 ### Features
