@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1] - 2025-10-18
+
+### Other Changes
+
+- cleanup: fix linting issues and code quality for stable release
+
+
 ## [2.5.0] - 2025-10-18
 
 ### Features
