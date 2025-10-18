@@ -34,10 +34,10 @@ program
   .action(async (options: ReleaseOptions) => {
     try {
       console.log()
-      console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════╗'))
-      console.log(chalk.cyan('║                  GO-WORKFLOW V2 - RELEASE AUTOMATION                  ║'))
-      console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════════════╝'))
-      console.log(chalk.gray(`\n                              Version ${version}\n`))
+      console.log(chalk.cyan('╔══════════════════════════════════════════════════════════╗'))
+      console.log(chalk.cyan('║            GO-WORKFLOW V2 - RELEASE AUTOMATION           ║'))
+      console.log(chalk.cyan('╚══════════════════════════════════════════════════════════╝'))
+      console.log(chalk.gray(`                       Version ${version}\n`))
 
       if (options.dryRun) {
         console.log(chalk.yellow.bold('┌──────────────────────────────────────────────────────────────┐'))
@@ -90,9 +90,9 @@ program
     }
     catch (error) {
       console.log()
-      console.log(chalk.red('╔═══════════════════════════════════════════════════════════════════════════╗'))
+      console.log(chalk.red('╔══════════════════════════════════════════════════════════════════╗'))
       console.log(chalk.red('║                          RELEASE FAILED                          ║'))
-      console.log(chalk.red('╚═══════════════════════════════════════════════════════════════════════════╝'))
+      console.log(chalk.red('╚══════════════════════════════════════════════════════════════════╝'))
       console.log()
 
       if (error instanceof Error) {
