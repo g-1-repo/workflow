@@ -321,6 +321,14 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
           helpers.setTitle('Deployment configuration - ✅ Using CLI options')
           return
         }
+        
+        // In non-interactive mode without explicit flags, skip all deployments by default
+        if (options.nonInteractive) {
+          options.skipCloudflare = true
+          options.skipNpm = true
+          helpers.setTitle('Deployment configuration - ℹ️ Non-interactive mode: skipping deployments')
+          return
+        }
 
         helpers.setOutput('Detecting available deployment options...')
 
