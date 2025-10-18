@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.0] - 2025-10-18
+
+### Features
+
+- add authentication verification and improve npm publish to prevent freezing
+
+### Bug Fixes
+
+- clean up TypeScript errors in authentication verification
+
+
 ## [2.5.2] - 2025-10-18
 
 
