@@ -534,8 +534,8 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         helpers.setOutput('Publishing to npm registry...')
 
         try {
-          // Use npm publish with terminal access for interactive prompts (OTP, etc.)
-          helpers.setOutput('Publishing to npm... (you may need to interact with prompts)')
+          // Use npm publish with automatic Enter key press for OTP prompts
+          helpers.setOutput('Publishing to npm... (automatically handling OTP prompts)')
           
           const publishResult = await execa('npm', [
             'publish',
@@ -543,8 +543,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             '--registry', 'https://registry.npmjs.org/',
             '--no-git-checks'
           ], {
-            stdio: 'inherit', // Allow terminal interaction
+            stdio: ['pipe', 'inherit', 'inherit'], // stdin pipe, stdout/stderr inherit
             timeout: 120000, // 2 minute timeout for interactive prompts
+            input: '\n', // Automatically send Enter key
             env: {
               ...process.env,
               NPM_CONFIG_AUDIT: 'false',
