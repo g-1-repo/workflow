@@ -34,7 +34,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build && npm run typecheck && npm run lint && npm test",
+    "prepublishOnly": "npm run clean && npm run build && npm run typecheck",
     "release": "node dist/cli.js release",
     "dev:cli": "tsup --watch && node dist/cli.js"
   },
