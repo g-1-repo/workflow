@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.2] - 2025-10-18
+
+### Bug Fixes
+
+- correct non-interactive deployment configuration logic
+
+### Other Changes
+
+- test: add change to test non-interactive deployment fix
+
+
 ## [2.3.1] - 2025-10-18
 
 ### Bug Fixes
