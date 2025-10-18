@@ -537,7 +537,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           // Use npm publish with terminal access for interactive prompts (OTP, etc.)
           helpers.setOutput('Publishing to npm... (you may need to interact with prompts)')
 
-          const publishResult = await execa('npm', [
+          const _publishResult = await execa('npm', [
             'publish',
             '--access',
             'public',
