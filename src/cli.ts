@@ -34,7 +34,7 @@ program
   .action(async (options: ReleaseOptions) => {
     try {
       // Clear screen and show main header
-      process.stdout.write('\x1b[2J\x1b[0f') // Clear screen
+      process.stdout.write('\x1B[2J\x1B[0f') // Clear screen
       console.log()
       console.log(chalk.cyan('╔═══════════════════════════════════════════════════════════════════════════╗'))
       console.log(chalk.cyan('║                   🚀 GO-WORKFLOW V2 - RELEASE AUTOMATION                ║'))
@@ -67,7 +67,7 @@ program
       console.log(chalk.green('║                        🎉 RELEASE COMPLETED SUCCESSFULLY!                     ║'))
       console.log(chalk.green('╚═══════════════════════════════════════════════════════════════════════════╝'))
       console.log()
-      
+
       console.log(chalk.bold('✨ Release Summary'))
       console.log(chalk.dim('─'.repeat(50)))
 
@@ -80,11 +80,11 @@ program
       }
 
       if (context.deployments?.cloudflare) {
-        console.log(chalk.cyan('  ☁️  Cloudflare:  ' + chalk.green('✓ Deployed')))
+        console.log(chalk.cyan(`  ☁️  Cloudflare:  ${chalk.green('✓ Deployed')}`))
       }
 
       if (context.deployments?.npm) {
-        console.log(chalk.cyan('  📦 npm Registry:' + chalk.green(' ✓ Published')))
+        console.log(chalk.cyan(`  📦 npm Registry:${chalk.green(' ✓ Published')}`))
       }
 
       console.log(chalk.dim('─'.repeat(50)))
@@ -109,19 +109,19 @@ program
           console.log(chalk.yellow.bold('💡 Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow('  • Add test files to your project, or'))
-          console.log(chalk.yellow('  • Skip tests with: ' + chalk.white.bold('bun run release --skip-tests')))
+          console.log(chalk.yellow(`  • Skip tests with: ${chalk.white.bold('bun run release --skip-tests')}`))
         }
         else if (error.message.includes('Uncommitted changes')) {
           console.log(chalk.yellow.bold('💡 Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
-          console.log(chalk.yellow('  • Commit your changes with: ' + chalk.white.bold('git add . && git commit -m "your message"')))
-          console.log(chalk.yellow('  • Or stash them with: ' + chalk.white.bold('git stash')))
+          console.log(chalk.yellow(`  • Commit your changes with: ${chalk.white.bold('git add . && git commit -m "your message"')}`))
+          console.log(chalk.yellow(`  • Or stash them with: ${chalk.white.bold('git stash')}`))
         }
         else if (error.message.includes('TypeScript errors')) {
           console.log(chalk.yellow.bold('💡 Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
-          console.log(chalk.yellow('  • Fix TypeScript errors with: ' + chalk.white.bold('bun run typecheck')))
-          console.log(chalk.yellow('  • Or skip type checking with: ' + chalk.white.bold('bun run release --skip-lint')))
+          console.log(chalk.yellow(`  • Fix TypeScript errors with: ${chalk.white.bold('bun run typecheck')}`))
+          console.log(chalk.yellow(`  • Or skip type checking with: ${chalk.white.bold('bun run release --skip-lint')}`))
         }
         console.log()
 

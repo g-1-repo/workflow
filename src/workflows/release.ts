@@ -48,7 +48,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   // Interactive deployment configuration - ask questions upfront
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
     // Clear screen and show header
-    process.stdout.write('\x1b[2J\x1b[0f') // Clear screen and move cursor to top
+    process.stdout.write('\x1B[2J\x1B[0f') // Clear screen and move cursor to top
     process.stdout.write('\n')
     process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
     process.stdout.write('║                    🔧 DEPLOYMENT CONFIGURATION                  ║\n')
@@ -59,17 +59,17 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
     const hasNpmSetup = await detectNpmSetup()
 
     if (hasNpmSetup && options.skipNpm === undefined) {
-      process.stdout.write('\x1b[1m\x1b[36m→ npm Publishing Configuration\x1b[0m\n')
+      process.stdout.write('\x1B[1m\x1B[36m→ npm Publishing Configuration\x1B[0m\n')
       process.stdout.write('  Configure npm registry publishing for this release\n')
       process.stdout.write('\n')
-      
+
       const enquirer = await import('enquirer')
       const response = await enquirer.default.prompt({
         type: 'confirm',
         name: 'publishToNpm',
         message: '  📦 Publish to npm registry?',
         initial: false,
-        prefix: '  '
+        prefix: '  ',
       }) as { publishToNpm: boolean }
 
       options.skipNpm = !response.publishToNpm
@@ -77,17 +77,17 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
     }
 
     if (hasCloudflare && options.skipCloudflare === undefined) {
-      process.stdout.write('\x1b[1m\x1b[36m→ Cloudflare Deployment Configuration\x1b[0m\n')
+      process.stdout.write('\x1B[1m\x1B[36m→ Cloudflare Deployment Configuration\x1B[0m\n')
       process.stdout.write('  Configure Cloudflare Workers deployment for this release\n')
       process.stdout.write('\n')
-      
+
       const enquirer = await import('enquirer')
       const response = await enquirer.default.prompt({
         type: 'confirm',
         name: 'deployToCloudflare',
         message: '  ☁️  Deploy to Cloudflare?',
         initial: false,
-        prefix: '  '
+        prefix: '  ',
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
@@ -101,10 +101,10 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       options.skipNpm = true
 
     // Show configuration summary
-    process.stdout.write('\x1b[2m────────────────────────────────────────────────────────────────\x1b[0m\n')
-    process.stdout.write('\x1b[1mConfiguration Summary:\x1b[0m\n')
-    process.stdout.write(`  npm Publishing: ${options.skipNpm ? '\x1b[31mSkipped\x1b[0m' : '\x1b[32mEnabled\x1b[0m'}\n`)
-    process.stdout.write(`  Cloudflare Deploy: ${options.skipCloudflare ? '\x1b[31mSkipped\x1b[0m' : '\x1b[32mEnabled\x1b[0m'}\n`)
+    process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
+    process.stdout.write('\x1B[1mConfiguration Summary:\x1B[0m\n')
+    process.stdout.write(`  npm Publishing: ${options.skipNpm ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
+    process.stdout.write(`  Cloudflare Deploy: ${options.skipCloudflare ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
     process.stdout.write('\n')
   }
 
@@ -118,16 +118,16 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       const changesList = changedFiles.map(file => `    ${file}`).join('\n')
 
       // Clear and show warning header
-      process.stdout.write('\x1b[2J\x1b[0f') // Clear screen
+      process.stdout.write('\x1B[2J\x1B[0f') // Clear screen
       process.stdout.write('\n')
       process.stdout.write('╔══════════════════════════════════════════════════════════════╗\n')
       process.stdout.write('║                    ⚠️  UNCOMMITTED CHANGES                    ║\n')
       process.stdout.write('╚══════════════════════════════════════════════════════════════╝\n')
       process.stdout.write('\n')
-      process.stdout.write('\x1b[1m\x1b[33mThe following files have uncommitted changes:\x1b[0m\n')
+      process.stdout.write('\x1B[1m\x1B[33mThe following files have uncommitted changes:\x1B[0m\n')
       process.stdout.write(`\n${changesList}\n\n`)
-      process.stdout.write('\x1b[2m────────────────────────────────────────────────────────────────\x1b[0m\n')
-      process.stdout.write('\x1b[1mHow would you like to proceed?\x1b[0m\n')
+      process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
+      process.stdout.write('\x1B[1mHow would you like to proceed?\x1B[0m\n')
       process.stdout.write('\n')
 
       if (!options.nonInteractive) {
@@ -141,39 +141,39 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             { name: 'stash', message: '📦 Stash changes for later', value: 'stash' },
             { name: 'force', message: '⚠️  Continue anyway (--force)', value: 'force' },
           ],
-          prefix: '  '
+          prefix: '  ',
         }) as { action: 'commit' | 'stash' | 'force' }
 
         process.stdout.write('\n')
 
         if (response.action === 'commit') {
-          process.stdout.write('\x1b[1m\x1b[36m→ Commit Configuration\x1b[0m\n')
+          process.stdout.write('\x1B[1m\x1B[36m→ Commit Configuration\x1B[0m\n')
           process.stdout.write('  Enter a commit message for these changes\n')
           process.stdout.write('\n')
-          
+
           // Get commit message
           const commitResponse = await enquirer.default.prompt({
             type: 'input',
             name: 'message',
             message: '  💬 Commit message:',
             initial: 'chore: commit changes before release',
-            prefix: '  '
+            prefix: '  ',
           }) as { message: string }
 
           // Commit changes
-          process.stdout.write('\n\x1b[2mCommitting changes...\x1b[0m\n')
+          process.stdout.write('\n\x1B[2mCommitting changes...\x1B[0m\n')
           await git.stageFiles(changedFiles)
           await git.commit(commitResponse.message)
-          process.stdout.write('\x1b[32m✅ Changes committed successfully\x1b[0m\n')
+          process.stdout.write('\x1B[32m✅ Changes committed successfully\x1B[0m\n')
         }
         else if (response.action === 'stash') {
-          process.stdout.write('\x1b[2mStashing changes...\x1b[0m\n')
+          process.stdout.write('\x1B[2mStashing changes...\x1B[0m\n')
           await execa('git', ['stash', 'push', '-m', 'Pre-release stash'], { stdio: 'pipe' })
-          process.stdout.write('\x1b[32m✅ Changes stashed successfully\x1b[0m\n')
+          process.stdout.write('\x1B[32m✅ Changes stashed successfully\x1B[0m\n')
         }
         else if (response.action === 'force') {
           options.force = true
-          process.stdout.write('\x1b[33m⚠️  Continuing with uncommitted changes\x1b[0m\n')
+          process.stdout.write('\x1B[33m⚠️  Continuing with uncommitted changes\x1B[0m\n')
         }
 
         process.stdout.write('\n')
