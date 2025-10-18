@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.5] - 2025-10-18
+
+### Bug Fixes
+
+- make deployment failures non-fatal
+
+### Other Changes
+
+- test: add change to test graceful npm failure
+
+
 ## [2.3.4] - 2025-10-18
 
 ### Other Changes
