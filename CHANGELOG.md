@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.11.2] - 2025-10-18
+
+### Other Changes
+
+- chore: prepare for v2.11.4 stable release
+- final: prepare stable build for GitHub publish
+
+
 ## [2.11.1] - 2025-10-18
 
 ### Other Changes
