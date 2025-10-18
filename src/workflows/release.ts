@@ -301,46 +301,18 @@ export function createReleaseWorkflow(options: ReleaseOptions = {}): WorkflowSte
         }
 
         if (availableOptions.length === 0) {
+          options.skipCloudflare = true
+          options.skipNpm = true
           helpers.setTitle('Deployment configuration - ℹ️ No deployment options detected')
           return
         }
 
-        const enquirer = await import('enquirer')
-        const { prompt } = enquirer.default || enquirer
-
-        const response = await prompt({
-          type: 'multiselect',
-          name: 'deployments',
-          message: 'Select deployment targets:',
-          choices: [
-            ...availableOptions,
-            {
-              name: 'none',
-              message: '🚫 Skip all deployments',
-              value: 'none',
-            },
-          ],
-          validate: (choices: string[]) => {
-            if (choices.includes('none') && choices.length > 1) {
-              return 'Cannot select "Skip all" with other options'
-            }
-            return true
-          },
-        } as any) as { deployments: string[] }
-
-        // Update options based on user selection
-        if (response.deployments.includes('none')) {
-          options.skipCloudflare = true
-          options.skipNpm = true
-          helpers.setTitle('Deployment configuration - ✅ All deployments skipped')
-        }
-        else {
-          options.skipCloudflare = !response.deployments.includes('cloudflare')
-          options.skipNpm = !response.deployments.includes('npm')
-
-          const selected = response.deployments.join(', ')
-          helpers.setTitle(`Deployment configuration - ✅ Selected: ${selected}`)
-        }
+        // Instead of interactive prompt, show available options and require CLI flags
+        const availableTargets = availableOptions.map(opt => `  - ${opt.message}`).join('\n')
+        
+        const errorMessage = `Available deployment targets detected:\n${availableTargets}\n\nPlease specify deployment options:\n\n1. Skip all deployments: --skip-cloudflare --skip-npm\n2. Deploy only to npm: --skip-cloudflare\n3. Deploy only to Cloudflare: --skip-npm\n4. Deploy to both: (no flags needed)\n\nExample: bun run release --skip-cloudflare`
+        
+        throw new Error(errorMessage)
       },
     },
 

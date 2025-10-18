@@ -227,3 +227,4 @@ MIT © [Go Corp](https://github.com/go-corp)
 # Test interactive deployment
 # Test npm prompt
 # Test non-interactive fix
+# Test deployment prompt fix
