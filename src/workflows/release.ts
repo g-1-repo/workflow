@@ -3,6 +3,7 @@
  */
 
 import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
+import process from 'node:process'
 import { execa } from 'execa'
 import * as semver from 'semver'
 import { createGitStore } from '../core/git-store.js'
@@ -46,8 +47,8 @@ async function detectNpmSetup(): Promise<boolean> {
 export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
   // Interactive deployment configuration - ask questions upfront
   if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
-    console.log('\n🔧 Deployment Configuration')
-    console.log('----------------------------------------')
+    process.stdout.write('\n🔧 Deployment Configuration\n')
+    process.stdout.write('----------------------------------------\n')
 
     const hasCloudflare = await detectCloudflareSetup()
     const hasNpmSetup = await detectNpmSetup()
@@ -82,7 +83,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
     if (options.skipNpm === undefined)
       options.skipNpm = true
 
-    console.log('\n')
+    process.stdout.write('\n')
   }
 
   // Set defaults for non-interactive mode
@@ -158,7 +159,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             helpers.setOutput('Executing test suite...')
 
             try {
-              const result = await execa('bun', ['test'], { stdio: 'pipe' })
+              const _result = await execa('bun', ['test'], { stdio: 'pipe' })
               ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
               helpers.setTitle('Running tests - ✅ All tests passed')
             }
