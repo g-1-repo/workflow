@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.3] - 2025-10-18
+
+### Bug Fixes
+
+- clean up syntax errors in deployment configuration
+- add interactive deployment prompts using enquirer
+
+
 ## [2.4.2] - 2025-10-18
 
 ### Bug Fixes
