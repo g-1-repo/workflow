@@ -221,11 +221,11 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             // Define test command priority order
             const testCommands: Array<[string, string[]]> = [
               ['bun', ['run', 'test:ci']], // CI test command (preferred)
-              ['bun', ['run', 'test']],    // Standard test command
-              ['bun', ['test']],           // Direct bun test
+              ['bun', ['run', 'test']], // Standard test command
+              ['bun', ['test']], // Direct bun test
               ['npm', ['run', 'test:ci']], // npm CI fallback
-              ['npm', ['run', 'test']],    // npm standard fallback
-              ['npm', ['test']],           // npm direct fallback
+              ['npm', ['run', 'test']], // npm standard fallback
+              ['npm', ['test']], // npm direct fallback
             ]
 
             let lastError: any = null
@@ -240,12 +240,12 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
               }
               catch (error) {
                 const errorOutput = error instanceof Error ? error.message : String(error)
-                
+
                 // Check if it's a "no tests found" or "script not found" error
-                if (errorOutput.includes('No tests found') || 
-                    errorOutput.includes('no test files') ||
-                    errorOutput.includes('script not found') ||
-                    errorOutput.includes('Missing script')) {
+                if (errorOutput.includes('No tests found')
+                  || errorOutput.includes('no test files')
+                  || errorOutput.includes('script not found')
+                  || errorOutput.includes('Missing script')) {
                   // Try next command
                   lastError = error
                   continue
@@ -266,10 +266,10 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
 
             // If we get here, all commands failed - check if it's because no tests exist
             const lastErrorOutput = lastError instanceof Error ? lastError.message : String(lastError)
-            if (lastErrorOutput.includes('No tests found') || 
-                lastErrorOutput.includes('no test files') ||
-                lastErrorOutput.includes('script not found') ||
-                lastErrorOutput.includes('Missing script')) {
+            if (lastErrorOutput.includes('No tests found')
+              || lastErrorOutput.includes('no test files')
+              || lastErrorOutput.includes('script not found')
+              || lastErrorOutput.includes('Missing script')) {
               ctx.quality = { lintPassed: ctx.quality?.lintPassed ?? true, testsPassed: true }
               helpers.setTitle('Running tests - ✅ No tests found (skipping)')
               return
@@ -496,12 +496,12 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           }
           catch (error) {
             const errorOutput = error instanceof Error ? error.message : String(error)
-            
+
             // Check if it's a missing script error
-            if (errorOutput.includes('script not found') || 
-                errorOutput.includes('Missing script') ||
-                errorOutput.includes('npm ERR! missing script') ||
-                errorOutput.includes('Script not found')) {
+            if (errorOutput.includes('script not found')
+              || errorOutput.includes('Missing script')
+              || errorOutput.includes('npm ERR! missing script')
+              || errorOutput.includes('Script not found')) {
               lastError = error
               continue
             }
@@ -514,10 +514,10 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         // If we get here, build script wasn't found - that's okay for some projects
         if (lastError) {
           const lastErrorOutput = lastError instanceof Error ? lastError.message : String(lastError)
-          if (lastErrorOutput.includes('script not found') || 
-              lastErrorOutput.includes('Missing script') ||
-              lastErrorOutput.includes('npm ERR! missing script') ||
-              lastErrorOutput.includes('Script not found')) {
+          if (lastErrorOutput.includes('script not found')
+            || lastErrorOutput.includes('Missing script')
+            || lastErrorOutput.includes('npm ERR! missing script')
+            || lastErrorOutput.includes('Script not found')) {
             helpers.setTitle('Build project - ✅ No build script found (skipping)')
             return
           }
