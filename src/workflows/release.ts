@@ -67,9 +67,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       const response = await enquirer.default.prompt({
         type: 'confirm',
         name: 'publishToNpm',
-        message: '  📦 Publish to npm registry?',
+        message: '  Publish to npm registry?',
         initial: false,
-        prefix: '  ',
+        prefix: '  '
       }) as { publishToNpm: boolean }
 
       options.skipNpm = !response.publishToNpm
@@ -85,9 +85,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       const response = await enquirer.default.prompt({
         type: 'confirm',
         name: 'deployToCloudflare',
-        message: '  ☁️  Deploy to Cloudflare?',
+        message: '  Deploy to Cloudflare?',
         initial: false,
-        prefix: '  ',
+        prefix: '  '
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
@@ -137,11 +137,11 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           name: 'action',
           message: '  Choose an action:',
           choices: [
-            { name: 'commit', message: '📝 Commit all changes now', value: 'commit' },
-            { name: 'stash', message: '📦 Stash changes for later', value: 'stash' },
-            { name: 'force', message: '⚠️  Continue anyway (--force)', value: 'force' },
+            { name: 'commit', message: 'Commit all changes now', value: 'commit' },
+            { name: 'stash', message: 'Stash changes for later', value: 'stash' },
+            { name: 'force', message: 'Continue anyway (--force)', value: 'force' },
           ],
-          prefix: '  ',
+          prefix: '  '
         }) as { action: 'commit' | 'stash' | 'force' }
 
         process.stdout.write('\n')
@@ -155,9 +155,9 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           const commitResponse = await enquirer.default.prompt({
             type: 'input',
             name: 'message',
-            message: '  💬 Commit message:',
+            message: '  Commit message:',
             initial: 'chore: commit changes before release',
-            prefix: '  ',
+            prefix: '  '
           }) as { message: string }
 
           // Commit changes
