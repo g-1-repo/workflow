@@ -692,15 +692,14 @@ function generateReleaseNotes(commits: any[], version: string): string {
 // GitHub Actions Monitoring
 // =============================================================================
 
-
 export async function watchGitHubActions(repositoryName: string, tagName: string): Promise<void> {
   try {
     process.stdout.write('\n')
-    process.stdout.write(chalk.cyan('╔════════════════════════════════════════════════════════════════╗\n'))
-    process.stdout.write(chalk.cyan('║                    GITHUB ACTIONS MONITOR                    ║\n'))
-    process.stdout.write(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\n'))
+    process.stdout.write('╔════════════════════════════════════════════════════════════════╗\n')
+    process.stdout.write('║                    GITHUB ACTIONS MONITOR                      ║\n')
+    process.stdout.write('╚════════════════════════════════════════════════════════════════╝\n')
     process.stdout.write('\n')
-    process.stdout.write(chalk.gray('`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`'))
+    process.stdout.write(`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`)
     process.stdout.write('\n')
 
     let foundPublishingWorkflow = false
