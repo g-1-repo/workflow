@@ -2,12 +2,12 @@
  * Complete Release Workflow - Git → Cloudflare → GitHub Release (triggers npm via Actions)
  */
 
-import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
-import process from 'node:process'
 import { createGitOperations } from '@g-1/util/node'
 import chalk from 'chalk'
 import { execa } from 'execa'
+import process from 'node:process'
 import * as semver from 'semver'
+import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 
 // Detection functions
 async function detectCloudflareSetup(): Promise<boolean> {
@@ -692,14 +692,15 @@ function generateReleaseNotes(commits: any[], version: string): string {
 // GitHub Actions Monitoring
 // =============================================================================
 
+
 export async function watchGitHubActions(repositoryName: string, tagName: string): Promise<void> {
   try {
     process.stdout.write('\n')
-    process.stdout.write('╔════════════════════════════════════════════════════════════════╗\n')
-    process.stdout.write('║                    GITHUB ACTIONS MONITOR                    ║\n')
-    process.stdout.write('╚════════════════════════════════════════════════════════════════╝\n')
+    process.stdout.write(chalk.cyan('╔════════════════════════════════════════════════════════════════╗\n'))
+    process.stdout.write(chalk.cyan('║                    GITHUB ACTIONS MONITOR                    ║\n'))
+    process.stdout.write(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\n'))
     process.stdout.write('\n')
-    process.stdout.write(`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`)
+    process.stdout.write(chalk.gray('`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`'))
     process.stdout.write('\n')
 
     let foundPublishingWorkflow = false
