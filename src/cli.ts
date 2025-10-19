@@ -14,6 +14,7 @@ import { createReleaseWorkflow, deployToCloudflare, detectCloudflareSetup, hasNp
 // Load version from package.json
 function getVersion(): string {
   try {
+    // eslint-disable-next-line ts/no-require-imports
     const fs = require('node:fs')
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
     return packageJson.version || 'unknown'

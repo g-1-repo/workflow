@@ -52,7 +52,7 @@ export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<
       const workflows = JSON.parse(result.stdout)
       return workflows.some((workflow: any) => {
         const name = workflow.name?.toLowerCase() || ''
-        return name.includes('publish') && name.includes('npm')
+        return (name.includes('publish') && name.includes('npm'))
           || name === 'publish to npm'
           || name === 'npm publish'
           || name === 'publish npm'
@@ -954,7 +954,7 @@ export async function deployToCloudflare(): Promise<void> {
     process.stdout.write('\n')
     process.stdout.write('🚀 Deploying to Cloudflare Workers...\n')
 
-    const result = await execa('npx', ['wrangler', 'deploy'], { stdio: 'inherit' })
+    await execa('npx', ['wrangler', 'deploy'], { stdio: 'inherit' })
 
     process.stdout.write('\n')
     process.stdout.write(`🎉 ${chalk.green.bold('Cloudflare deployment completed successfully!')}\n`)
