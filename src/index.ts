@@ -30,8 +30,8 @@ export type {
 // Workflow exports
 export { createReleaseWorkflow } from './workflows/release.js'
 
-// Re-export consolidated Git operations from @go-corp/utils
-export { createGitOperations as createGitStore, GitOperations as GitStore } from '@go-corp/utils/node'
+// Re-export consolidated Git operations from @g-1/util
+export { createGitOperations as createGitStore, GitOperations as GitStore } from '@g-1/util/node'
 
 /**
  * Quick release function for simple usage

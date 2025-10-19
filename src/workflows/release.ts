@@ -4,7 +4,7 @@
 
 import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 import process from 'node:process'
-import { createGitOperations } from '@go-corp/utils/node'
+import { createGitOperations } from '@g-1/util/node'
 import { execa } from 'execa'
 import * as semver from 'semver'
 
