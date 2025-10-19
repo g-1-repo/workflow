@@ -413,9 +413,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Commands
 
-- `go-workflow release` - Complete release automation
-- `go-workflow status` - Project and workflow status
-- `go-workflow feature` - Branch management (coming soon)
+- `workflow release` - Complete release automation
+- `workflow status` - Project and workflow status
+- `workflow feature` - Branch management (coming soon)
 
 ### Breaking Changes
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * go-workflow CLI - Enterprise release automation
+ * G1 Workflow CLI - Enterprise release automation
  */
 
 import type { ReleaseOptions } from './types/index.js'
@@ -14,19 +14,18 @@ import { createReleaseWorkflow } from './workflows/release.js'
 const version = '2.0.1'
 
 program
-  .name('go-workflow')
+  .name('workflow')
   .description('🚀 Enterprise release automation and workflow orchestration')
   .version(version)
 
 // Release command
 program
   .command('release')
-  .description('🚀 Execute complete release workflow: quality gates → git → cloudflare → npm')
+  .description('🚀 Execute complete release workflow: quality gates → git → cloudflare → GitHub release')
   .option('-t, --type <type>', 'Version bump type', /^(patch|minor|major)$/)
   .option('--skip-tests', 'Skip running tests')
   .option('--skip-lint', 'Skip linting')
   .option('--skip-cloudflare', 'Skip Cloudflare deployment')
-  .option('--skip-npm', 'Skip npm publishing')
   .option('--non-interactive', 'Run in non-interactive mode (skip prompts)')
   .option('--dry-run', 'Show what would be done without executing')
   .option('--verbose', 'Show detailed output')
@@ -35,7 +34,7 @@ program
     try {
       console.log()
       console.log(chalk.cyan('╔══════════════════════════════════════════════════════════╗'))
-      console.log(chalk.cyan('║            GO-WORKFLOW V2 - RELEASE AUTOMATION           ║'))
+      console.log(chalk.cyan('║               G1 WORKFLOW V2 - RELEASE AUTOMATION        ║'))
       console.log(chalk.cyan('╚══════════════════════════════════════════════════════════╝'))
       console.log(chalk.gray(`                       Version ${version}\n`))
 
@@ -81,9 +80,6 @@ program
         console.log(chalk.cyan(`  Cloudflare:  ${chalk.green('✓ Deployed')}`))
       }
 
-      if (context.deployments?.npm) {
-        console.log(chalk.cyan(`  npm Registry:${chalk.green(' ✓ Published')}`))
-      }
 
       console.log(chalk.dim('─'.repeat(50)))
       console.log()
@@ -107,7 +103,7 @@ program
           console.log(chalk.yellow.bold('Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow('  • Add test files to your project, or'))
-          console.log(chalk.yellow(`  • Skip tests with: ${chalk.white.bold('bun run release --skip-tests')}`))
+          console.log(chalk.yellow(`  • Skip tests with: ${chalk.white.bold('workflow release --skip-tests')}`))
         }
         else if (error.message.includes('Uncommitted changes')) {
           console.log(chalk.yellow.bold('Suggested Solutions'))
@@ -119,7 +115,7 @@ program
           console.log(chalk.yellow.bold('Suggested Solutions'))
           console.log(chalk.yellow.dim('─'.repeat(30)))
           console.log(chalk.yellow(`  • Fix TypeScript errors with: ${chalk.white.bold('bun run typecheck')}`))
-          console.log(chalk.yellow(`  • Or skip type checking with: ${chalk.white.bold('bun run release --skip-lint')}`))
+          console.log(chalk.yellow(`  • Or skip type checking with: ${chalk.white.bold('workflow release --skip-lint')}`))
         }
         console.log()
 
@@ -156,7 +152,7 @@ program
   .command('status')
   .description('📊 Show project and workflow status')
   .action(async () => {
-    console.log(chalk.cyan.bold('📊 Go-Workflow Status'))
+    console.log(chalk.cyan.bold('📊 G1 Workflow Status'))
     console.log(chalk.green(`✅ V2 Core: Task Engine with listr2`))
     console.log(chalk.green(`✅ V2 Release: Complete Git → Cloudflare → npm pipeline`))
     console.log(chalk.yellow(`🚧 V2 Feature: Branch management (coming soon)`))

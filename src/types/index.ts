@@ -286,12 +286,8 @@ export interface ReleaseOptions extends CliOptions {
   skipTests?: boolean
   skipLint?: boolean
   skipCloudflare?: boolean
-  skipNpm?: boolean
   force?: boolean
   nonInteractive?: boolean
-  npmConfig?: {
-    otp?: string
-  }
 }
 
 export interface FeatureOptions extends CliOptions {

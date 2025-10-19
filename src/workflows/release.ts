@@ -1,5 +1,5 @@
 /**
- * Complete Release Workflow - Git → Cloudflare → npm
+ * Complete Release Workflow - Git → Cloudflare → GitHub Release (triggers npm via Actions)
  */
 
 import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
@@ -12,69 +12,38 @@ import * as semver from 'semver'
 async function detectCloudflareSetup(): Promise<boolean> {
   try {
     const fs = await import('node:fs/promises')
-    // Check for wrangler.toml or wrangler.json
-    try {
-      await fs.access('wrangler.toml')
-      return true
-    }
-    catch {
+    // Check for wrangler.toml, wrangler.json, or wrangler.jsonc
+    const wranglerFiles = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc']
+    
+    for (const file of wranglerFiles) {
       try {
-        await fs.access('wrangler.json')
+        await fs.access(file)
         return true
       }
       catch {
-        return false
+        // Continue to next file
       }
     }
+    
+    return false
   }
   catch {
     return false
   }
 }
 
-async function detectNpmSetup(): Promise<boolean> {
-  try {
-    const fs = await import('node:fs/promises')
-    const packageJson = JSON.parse(await fs.readFile('package.json', 'utf-8'))
-    // Check if it's a publishable package (has name and not private)
-    return !!(packageJson.name && !packageJson.private)
-  }
-  catch {
-    return false
-  }
-}
 
 export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
-  // Interactive deployment configuration - ask questions upfront
-  if (!options.nonInteractive && (options.skipCloudflare === undefined || options.skipNpm === undefined)) {
-    process.stdout.write('\n')
-    process.stdout.write('╔══════════════════════════════════════════════════════════╗\n')
-    process.stdout.write('║                 DEPLOYMENT CONFIGURATION                 ║\n')
-    process.stdout.write('╚══════════════════════════════════════════════════════════╝\n')
-    process.stdout.write('\n')
-
+  // Interactive deployment configuration - ask about Cloudflare only
+  if (!options.nonInteractive && options.skipCloudflare === undefined) {
     const hasCloudflare = await detectCloudflareSetup()
-    const hasNpmSetup = await detectNpmSetup()
-
-    if (hasNpmSetup && options.skipNpm === undefined) {
-      process.stdout.write('\x1B[1m\x1B[36m→ npm Publishing Configuration\x1B[0m\n')
-      process.stdout.write('  Configure npm registry publishing for this release\n')
+    
+    if (hasCloudflare) {
       process.stdout.write('\n')
-
-      const enquirer = await import('enquirer')
-      const response = await enquirer.default.prompt({
-        type: 'confirm',
-        name: 'publishToNpm',
-        message: '  Publish to npm registry?',
-        initial: false,
-        prefix: '  ',
-      }) as { publishToNpm: boolean }
-
-      options.skipNpm = !response.publishToNpm
+      process.stdout.write('╔══════════════════════════════════════════════════════════╗\n')
+      process.stdout.write('║                 DEPLOYMENT CONFIGURATION                 ║\n')
+      process.stdout.write('╚══════════════════════════════════════════════════════════╝\n')
       process.stdout.write('\n')
-    }
-
-    if (hasCloudflare && options.skipCloudflare === undefined) {
       process.stdout.write('\x1B[1m\x1B[36m→ Cloudflare Deployment Configuration\x1B[0m\n')
       process.stdout.write('  Configure Cloudflare Workers deployment for this release\n')
       process.stdout.write('\n')
@@ -84,26 +53,20 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         type: 'confirm',
         name: 'deployToCloudflare',
         message: '  Deploy to Cloudflare?',
-        initial: false,
+        initial: true,
         prefix: '  ',
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
+      
+      // Show configuration summary
+      process.stdout.write('\n')
+      process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
+      process.stdout.write('\x1B[1mConfiguration Summary:\x1B[0m\n')
+      process.stdout.write(`  Cloudflare Deploy: ${options.skipCloudflare ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
+      process.stdout.write(`  npm Publishing: \x1B[33mVia GitHub Actions\x1B[0m (automatic on release)\n`)
       process.stdout.write('\n')
     }
-
-    // Set defaults for anything not detected
-    if (options.skipCloudflare === undefined)
-      options.skipCloudflare = true
-    if (options.skipNpm === undefined)
-      options.skipNpm = true
-
-    // Show configuration summary
-    process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
-    process.stdout.write('\x1B[1mConfiguration Summary:\x1B[0m\n')
-    process.stdout.write(`  npm Publishing: ${options.skipNpm ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
-    process.stdout.write(`  Cloudflare Deploy: ${options.skipCloudflare ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
-    process.stdout.write('\n')
   }
 
   // Handle uncommitted changes upfront (before workflow starts)
@@ -184,9 +147,8 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
   }
 
   // Set defaults for non-interactive mode
-  if (options.nonInteractive && options.skipCloudflare === undefined && options.skipNpm === undefined) {
+  if (options.nonInteractive && options.skipCloudflare === undefined) {
     options.skipCloudflare = true
-    options.skipNpm = true
   }
 
   return [
@@ -406,22 +368,20 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       },
     },
 
-    // Deployment Summary (options were configured at the beginning)
+    // Deployment Summary
     {
       title: 'Deployment configuration',
       task: async (ctx, helpers) => {
-        const enabledTargets = []
-
+        const deployments = []
+        
         if (!options.skipCloudflare)
-          enabledTargets.push('Cloudflare')
-        if (!options.skipNpm)
-          enabledTargets.push('npm')
+          deployments.push('Cloudflare')
+        
+        const summary = deployments.length > 0
+          ? `Will deploy to: ${deployments.join(', ')}`
+          : 'Cloudflare deployment skipped'
 
-        const summary = enabledTargets.length > 0
-          ? `Will deploy to: ${enabledTargets.join(', ')}`
-          : 'All deployments skipped'
-
-        helpers.setTitle(`Deployment configuration - ✅ ${summary}`)
+        helpers.setTitle(`Deployment configuration - ✅ ${summary} | npm: GitHub Actions`)
       },
     },
 
@@ -604,82 +564,12 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       },
     },
 
-    // npm Publishing
-    {
-      title: 'Publish to npm',
-      skip: () => options.skipNpm || false,
-      task: async (ctx, helpers) => {
-        helpers.setOutput('Publishing to npm registry...')
 
-        try {
-          // Use npm publish with terminal access for interactive prompts (OTP, etc.)
-          helpers.setOutput('Publishing to npm... (you may need to interact with prompts)')
-
-          const _publishResult = await execa('npm', [
-            'publish',
-            '--access',
-            'public',
-            '--registry',
-            'https://registry.npmjs.org/',
-            '--no-git-checks',
-          ], {
-            stdio: 'inherit', // Allow full terminal interaction
-            timeout: 120000, // 2 minute timeout for interactive prompts
-            env: {
-              ...process.env,
-              NPM_CONFIG_AUDIT: 'false',
-              NPM_CONFIG_FUND: 'false',
-              NPM_CONFIG_UPDATE_NOTIFIER: 'false',
-              // Removed CI=true to allow interactive prompts
-            },
-          })
-
-          ctx.deployments = {
-            ...ctx.deployments,
-            npm: {
-              registry: 'https://registry.npmjs.org',
-              tag: 'latest',
-              access: 'public',
-            },
-          }
-
-          helpers.setTitle(`Publish to npm - ✅ v${ctx.version!.next} published`)
-        }
-        catch (error) {
-          // Don't fail the entire workflow if npm publishing fails
-          const errorMessage = error instanceof Error ? error.message : String(error)
-          const errorOutput = error instanceof Error && 'stderr' in error ? error.stderr : ''
-          const fullError = `${errorMessage} ${errorOutput}`.toLowerCase()
-
-          if (fullError.includes('401') || fullError.includes('not authenticated') || fullError.includes('login')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: Authentication required')
-            helpers.setOutput('❌ Please run: npm login')
-          }
-          else if (fullError.includes('403') || fullError.includes('forbidden') || fullError.includes('permission')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: No permission to publish')
-            helpers.setOutput('❌ Check package name and access rights')
-          }
-          else if (fullError.includes('otp') || fullError.includes('one-time') || fullError.includes('two-factor')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: 2FA/OTP required')
-            helpers.setOutput('❌ OTP required but cannot be provided in automated workflow')
-          }
-          else if (fullError.includes('package already exists') || fullError.includes('version already published')) {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: Version already published')
-            helpers.setOutput('❌ This version already exists on npm')
-          }
-          else {
-            helpers.setTitle('Publish to npm - ⚠️ Failed: Unknown error')
-            helpers.setOutput(`❌ Error: ${errorMessage.slice(0, 100)}...`)
-          }
-        }
-      },
-    },
-
-    // GitHub Release
+    // GitHub Release (triggers npm publishing via GitHub Actions)
     {
       title: 'Create GitHub release',
       task: async (ctx, helpers) => {
-        helpers.setOutput('Creating GitHub release...')
+        helpers.setOutput('Creating GitHub release (triggers npm publishing)...')
 
         try {
           const releaseNotes = generateReleaseNotes(ctx.git!.commits, ctx.version!.next)
@@ -694,11 +584,23 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
             releaseNotes,
           ], { stdio: 'pipe' })
 
-          helpers.setTitle(`Create GitHub release - ✅ v${ctx.version!.next} released`)
+          helpers.setOutput('GitHub Actions will automatically publish to npm if package.json is detected')
+          helpers.setTitle(`Create GitHub release - ✅ v${ctx.version!.next} → npm via Actions`)
         }
-        catch {
-          // Don't fail the entire workflow if GitHub release fails
-          helpers.setTitle('Create GitHub release - ⚠️ Failed (continuing)')
+        catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          if (errorMessage.includes('gh: command not found')) {
+            helpers.setTitle('Create GitHub release - ⚠️ Failed: GitHub CLI not installed')
+            helpers.setOutput('❌ Install: https://cli.github.com/')
+          }
+          else if (errorMessage.includes('not authenticated') || errorMessage.includes('401')) {
+            helpers.setTitle('Create GitHub release - ⚠️ Failed: Not authenticated')
+            helpers.setOutput('❌ Run: gh auth login')
+          }
+          else {
+            helpers.setTitle('Create GitHub release - ⚠️ Failed (continuing)')
+            helpers.setOutput(`Error: ${errorMessage.slice(0, 60)}...`)
+          }
         }
       },
     },

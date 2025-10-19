@@ -112,20 +112,20 @@ The interactive release workflow (`bun run release`) includes:
 - **Comprehensive Context**: Error context preserved throughout the workflow
 
 ## Shared packages
-- go-test-suite: /Users/johnnymathis/Developer/go-test-suite
-- go-workflow-v2: /Users/johnnymathis/Developer/go-workflow-v2
-- go-utils: /Users/johnnymathis/Developer/go-utils
+- @g-1/test: /Users/johnnymathis/Developer/g1/test
+- @g-1/workflow: /Users/johnnymathis/Developer/g1/workflow
+- @g-1/util: /Users/johnnymathis/Developer/g1/util
 
 ## Guidance for Warp
 - Before adding utilities/runners/workflows, check these repos for an existing implementation.
 - Consolidation rules:
-  - go-utils: generic helpers/types/logging/config
-  - go-test-suite: testing/Vitest helpers, runners, fixtures, factories
-  - go-workflow-v2: workflow orchestration/execution, release pipelines
+  - @g-1/util: generic helpers/types/logging/config
+  - @g-1/test: testing/Vitest helpers, runners, fixtures, factories
+  - @g-1/workflow: workflow orchestration/execution, release pipelines
 - When duplication is detected, propose an extraction plan and PR outline to move code to the right package.
 
 ### Future Extensions
-- Configuration system (`.go-workflow.config.js`)
+- Configuration system (`.workflow.config.js`)
 - Feature branch workflow with PR automation
 - AI-powered commit and branch suggestions
 - Custom deployment targets via plugin system

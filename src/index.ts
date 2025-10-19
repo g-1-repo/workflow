@@ -1,5 +1,5 @@
 /**
- * go-workflow V2 - Enterprise Release Automation
+ * G1 Workflow V2 - Enterprise Release Automation
  *
  * Main library exports for programmatic usage
  */

@@ -46,30 +46,30 @@ npm install -g @g-1/workflow
 
 ```bash
 # Interactive release workflow (recommended)
-go-workflow release
+workflow release
 # → Prompts for deployment targets (npm, Cloudflare)
 # → Handles uncommitted changes interactively
 # → Executes complete release pipeline
 
 # Release with specific version bump
-go-workflow release --type minor
+workflow release --type minor
 
 # Skip specific deployments via CLI flags
-go-workflow release --skip-cloudflare --skip-npm
+workflow release --skip-cloudflare --skip-npm
 
 # Force release with uncommitted changes
-go-workflow release --force
+workflow release --force
 
 # Non-interactive mode (for CI/CD)
-go-workflow release --non-interactive --skip-cloudflare --skip-npm
+workflow release --non-interactive --skip-cloudflare --skip-npm
 
 # Show workflow status
-go-workflow status
+workflow status
 ```
 
 ## 📋 Commands
 
-### `go-workflow release`
+### `workflow release`
 
 Execute the complete release workflow with interactive configuration:
 
@@ -118,17 +118,17 @@ Execute the complete release workflow with interactive configuration:
 - `--dry-run` - Show what would be done without executing *(coming soon)*
 - `--verbose` - Show detailed output
 
-### `go-workflow feature` *(Coming Soon)*
+### `workflow feature` *(Coming Soon)*
 
 Create and manage feature branches with AI-powered suggestions:
 
 ```bash
-go-workflow feature                    # AI suggests branch name
-go-workflow feature "add-user-auth"    # Create specific feature
-go-workflow feature --auto-merge       # Enable auto-merge on PR
+workflow feature                    # AI suggests branch name
+workflow feature "add-user-auth"    # Create specific feature
+workflow feature --auto-merge       # Enable auto-merge on PR
 ```
 
-### `go-workflow status`
+### `workflow status`
 
 Show project and workflow status.
 
