@@ -4,21 +4,22 @@
 
 import type { WorkflowStep } from './types/index.js'
 import * as fs from 'node:fs/promises'
+import process from 'node:process'
 import chalk from 'chalk'
 import { execa } from 'execa'
 import { ErrorRecoveryService } from './core/error-recovery.js'
 import { createTaskEngine } from './core/task-engine.js'
 
 export async function testErrorRecovery(): Promise<void> {
-  console.log(chalk.cyan('╔════════════════════════════════════════════════════════════════╗'))
-  console.log(chalk.cyan('║                  ERROR RECOVERY TEST SUITE                     ║'))
-  console.log(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\\n'))
+  console.error(chalk.cyan('╔════════════════════════════════════════════════════════════════╗'))
+  console.error(chalk.cyan('║                  ERROR RECOVERY TEST SUITE                     ║'))
+  console.error(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\\n'))
 
   const testFile = './test-lint-error.ts'
 
   try {
     // Step 1: Create a test file with linting errors
-    console.log(chalk.blue('🧪 Creating test file with linting errors...'))
+    console.error(chalk.blue('🧪 Creating test file with linting errors...'))
     await createTestFileWithLintErrors(testFile)
 
     // Step 2: Create a workflow that will fail due to linting
@@ -41,7 +42,7 @@ export async function testErrorRecovery(): Promise<void> {
     ]
 
     // Step 3: Run the workflow with error recovery enabled
-    console.log(chalk.blue('🔄 Running workflow with automated error recovery...\\n'))
+    console.error(chalk.blue('🔄 Running workflow with automated error recovery...\\n'))
 
     const taskEngine = createTaskEngine({
       autoRecovery: true,
@@ -51,15 +52,15 @@ export async function testErrorRecovery(): Promise<void> {
     try {
       await taskEngine.execute(testWorkflow, {})
     }
-    catch (error) {
-      console.log(chalk.green('\\n✅ Error recovery completed. The workflow failed as expected, but recovery was triggered.'))
+    catch {
+      console.error(chalk.green('\\n✅ Error recovery completed. The workflow failed as expected, but recovery was triggered.'))
     }
   }
   finally {
     // Clean up test file
     try {
       await fs.unlink(testFile)
-      console.log(chalk.gray('\\n🧹 Test file cleaned up'))
+      console.error(chalk.gray('\\n🧹 Test file cleaned up'))
     }
     catch {
       // File might not exist, ignore
@@ -68,9 +69,9 @@ export async function testErrorRecovery(): Promise<void> {
 }
 
 export async function testErrorRecoveryDirectly(): Promise<void> {
-  console.log(chalk.cyan('╔════════════════════════════════════════════════════════════════╗'))
-  console.log(chalk.cyan('║               DIRECT ERROR RECOVERY TEST                      ║'))
-  console.log(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\\n'))
+  console.error(chalk.cyan('╔════════════════════════════════════════════════════════════════╗'))
+  console.error(chalk.cyan('║               DIRECT ERROR RECOVERY TEST                      ║'))
+  console.error(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\\n'))
 
   const recoveryService = ErrorRecoveryService.getInstance()
 
@@ -84,17 +85,17 @@ export async function testErrorRecoveryDirectly(): Promise<void> {
   ]
 
   for (const error of testErrors) {
-    console.log(chalk.blue(`\\n🧪 Testing error: ${error.message.slice(0, 50)}...`))
+    console.error(chalk.blue(`\\n🧪 Testing error: ${error.message.slice(0, 50)}...`))
 
     try {
       await recoveryService.executeRecovery(error)
-      console.log(chalk.green('✅ Recovery workflow completed'))
+      console.error(chalk.green('✅ Recovery workflow completed'))
     }
     catch (recoveryError) {
-      console.log(chalk.red(`❌ Recovery failed: ${recoveryError instanceof Error ? recoveryError.message : String(recoveryError)}`))
+      console.error(chalk.red(`❌ Recovery failed: ${recoveryError instanceof Error ? recoveryError.message : String(recoveryError)}`))
     }
 
-    console.log(chalk.gray('─'.repeat(68)))
+    console.error(chalk.gray('─'.repeat(68)))
   }
 }
 
@@ -116,7 +117,7 @@ export default badFormatting
 `
 
   await fs.writeFile(filePath, badCode)
-  console.log(chalk.gray(`  📄 Created ${filePath} with linting errors`))
+  console.error(chalk.gray(`  📄 Created ${filePath} with linting errors`))
 }
 
 // Command-line interface

@@ -31,7 +31,7 @@ export class ErrorRecoveryService {
   /**
    * Analyze error and determine if it can be automatically fixed
    */
-  async analyzeError(error: Error, context?: any): Promise<ErrorAnalysis> {
+  async analyzeError(error: Error, _context?: any): Promise<ErrorAnalysis> {
     const errorMessage = error.message.toLowerCase()
     const errorStack = error.stack?.toLowerCase() || ''
 
@@ -131,7 +131,7 @@ export class ErrorRecoveryService {
   /**
    * Create automated recovery workflow based on error analysis
    */
-  async createRecoveryWorkflow(analysis: ErrorAnalysis, originalError: Error): Promise<WorkflowStep[]> {
+  async createRecoveryWorkflow(analysis: ErrorAnalysis, _originalError: Error): Promise<WorkflowStep[]> {
     const steps: WorkflowStep[] = []
 
     // Always start with error analysis display
@@ -146,7 +146,7 @@ export class ErrorRecoveryService {
           analysis.suggestedFixes,
         )
 
-        console.log(errorBox)
+        console.error(errorBox)
         helpers.setTitle(`Error Analysis - ✅ ${analysis.type} error detected`)
       },
     })
@@ -170,8 +170,8 @@ export class ErrorRecoveryService {
           title: 'TypeScript Error Advisory',
           task: async (ctx, helpers) => {
             helpers.setOutput('TypeScript errors require manual intervention')
-            console.log(chalk.yellow('⚠️  TypeScript errors cannot be automatically fixed'))
-            console.log(chalk.gray('Please review and fix type errors manually'))
+            console.error(chalk.yellow('⚠️  TypeScript errors cannot be automatically fixed'))
+            console.error(chalk.gray('Please review and fix type errors manually'))
             helpers.setTitle('TypeScript Error Advisory - ✅ Manual intervention required')
           },
         })
@@ -182,8 +182,8 @@ export class ErrorRecoveryService {
           title: 'Authentication Error Advisory',
           task: async (ctx, helpers) => {
             helpers.setOutput('Authentication errors require manual setup')
-            console.log(chalk.yellow('⚠️  Authentication errors require manual intervention'))
-            console.log(chalk.gray('Please check your npm token or run: npm login'))
+            console.error(chalk.yellow('⚠️  Authentication errors require manual intervention'))
+            console.error(chalk.gray('Please check your npm token or run: npm login'))
             helpers.setTitle('Authentication Error Advisory - ✅ Manual intervention required')
           },
         })
@@ -194,7 +194,7 @@ export class ErrorRecoveryService {
           title: 'Unknown Error Advisory',
           task: async (ctx, helpers) => {
             helpers.setOutput('Unknown error requires manual investigation')
-            console.log(chalk.yellow('⚠️  Unknown error type - manual investigation needed'))
+            console.error(chalk.yellow('⚠️  Unknown error type - manual investigation needed'))
             helpers.setTitle('Unknown Error Advisory - ✅ Manual intervention required')
           },
         })
@@ -228,8 +228,8 @@ export class ErrorRecoveryService {
         helpers.setTitle('Recovery Verification - ✅ Completed')
 
         // Show next steps
-        console.log(`\\n${chalk.cyan.bold('RECOVERY COMPLETE')}`)
-        console.log(chalk.gray('Consider running the original workflow again to verify fixes'))
+        console.error(`\\n${chalk.cyan.bold('RECOVERY COMPLETE')}`)
+        console.error(chalk.gray('Consider running the original workflow again to verify fixes'))
       },
     })
 
@@ -241,9 +241,9 @@ export class ErrorRecoveryService {
    */
   async executeRecovery(error: Error, context?: WorkflowContext): Promise<void> {
     try {
-      console.log(`\\n${chalk.cyan('═'.repeat(68))}`)
-      console.log(chalk.cyan.bold('           AUTOMATED ERROR RECOVERY INITIATED           '))
-      console.log(`${chalk.cyan('═'.repeat(68))}\\n`)
+      console.error(`\\n${chalk.cyan('═'.repeat(68))}`)
+      console.error(chalk.cyan.bold('           AUTOMATED ERROR RECOVERY INITIATED           '))
+      console.error(`${chalk.cyan('═'.repeat(68))}\\n`)
 
       const analysis = await this.analyzeError(error, context)
       const recoverySteps = await this.createRecoveryWorkflow(analysis, error)
@@ -258,7 +258,7 @@ export class ErrorRecoveryService {
     }
     catch (recoveryError) {
       console.error(ErrorFormatter.formatError(recoveryError instanceof Error ? recoveryError : new Error(String(recoveryError)), 'critical').message)
-      console.log(chalk.red('\\nAutomated recovery failed. Manual intervention required.'))
+      console.error(chalk.red('\\nAutomated recovery failed. Manual intervention required.'))
     }
   }
 
@@ -293,7 +293,7 @@ export class ErrorRecoveryService {
             await execa('bun', ['run', 'lint'], { stdio: 'pipe' })
             helpers.setTitle('Verify linting - ✅ All issues resolved')
           }
-          catch (error) {
+          catch {
             helpers.setOutput('Some linting issues remain')
             helpers.setTitle('Verify linting - ⚠️ Manual fixes may be needed')
           }

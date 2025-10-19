@@ -72,7 +72,7 @@ export class TaskEngine {
 
         // Trigger automated error recovery if enabled
         if (this.options.autoRecovery !== false) {
-          console.log(chalk.cyan('\n🔧 Starting automated error recovery...'))
+          console.error(chalk.cyan('\n🔧 Starting automated error recovery...'))
           const recoveryService = ErrorRecoveryService.getInstance()
           await recoveryService.executeRecovery(error, context as WorkflowContext)
         }

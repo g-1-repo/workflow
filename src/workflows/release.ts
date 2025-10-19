@@ -1057,8 +1057,8 @@ async function fixLintingErrors(errorLogs: string): Promise<void> {
     // Commit fixes
     await commitAutomatedFixes('fix: automated lint error fixes')
   }
-  catch (error) {
-    process.stdout.write(`  ${chalk.yellow('✗')} Lint:fix could not resolve all issues\n`)
+  catch {
+    process.stdout.write(`  ${chalk.yellow('✗')} Lint:fix could not resolve all issues\\n`)
     process.stdout.write('  ⧖ Attempting manual fixes for common patterns...\n')
 
     // Try to fix common linting issues programmatically
@@ -1099,7 +1099,7 @@ async function fixBuildErrors(_errorLogs: string): Promise<void> {
 }
 
 async function applyCommonLintFixes(errorLogs: string): Promise<void> {
-  const fs = await import('node:fs/promises')
+  const _fs = await import('node:fs/promises')
 
   // Fix common patterns based on error logs
   if (errorLogs.includes('no-require-imports')) {
