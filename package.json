@@ -37,7 +37,7 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "go-workflow": "dist/cli.js"
+    "g1-workflow": "dist/cli.js"
   },
   "files": [
     "CHANGELOG.md",
@@ -62,8 +62,11 @@
     "release": "node dist/cli.js release",
     "dev:cli": "tsup --watch && node dist/cli.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@go-corp/utils": "^1.7.2",
+    "@g-1/util": "^1.8.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
     "conventional-commits-parser": "^6.2.0",
