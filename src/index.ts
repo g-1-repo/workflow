@@ -28,7 +28,7 @@ export type {
 } from './types/index.js'
 
 // Workflow exports
-export { createReleaseWorkflow } from './workflows/release.js'
+export { createReleaseWorkflow, watchGitHubActions } from './workflows/release.js'
 
 // Re-export consolidated Git operations from @g-1/util
 export { createGitOperations as createGitStore, GitOperations as GitStore } from '@g-1/util/node'

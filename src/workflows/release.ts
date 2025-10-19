@@ -714,7 +714,7 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
           '--repo', repositoryName,
           '--event', 'release',
           '--limit', '5',
-          '--json', 'status,name,workflowName,createdAt,id'
+          '--json', 'status,name,workflowName,createdAt,number,databaseId'
         ], { stdio: 'pipe' })
 
         const runs = JSON.parse(result.stdout)
@@ -727,11 +727,11 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
         if (recentPublishRun) {
           foundPublishingWorkflow = true
           process.stdout.write(`✅ Found publishing workflow: ${chalk.green(recentPublishRun.workflowName)}\n`)
-          process.stdout.write(`🔗 Run ID: ${chalk.gray(recentPublishRun.id)}\n`)
+          process.stdout.write(`🔗 Run #: ${chalk.gray(recentPublishRun.number)}\n`)
           process.stdout.write('\n')
 
           // Monitor the specific run
-          await monitorWorkflowRun(repositoryName, recentPublishRun.id)
+          await monitorWorkflowRun(repositoryName, recentPublishRun.databaseId)
           return
         }
         
@@ -762,14 +762,14 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
   }
 }
 
-async function monitorWorkflowRun(repositoryName: string, runId: string): Promise<void> {
+async function monitorWorkflowRun(repositoryName: string, runNumber: string | number): Promise<void> {
   let isCompleted = false
   let lastStatus = ''
   
   while (!isCompleted) {
     try {
       const result = await execa('gh', [
-        'run', 'view', runId,
+        'run', 'view', String(runNumber),
         '--repo', repositoryName,
         '--json', 'status,conclusion,jobs'
       ], { stdio: 'pipe' })
@@ -806,7 +806,7 @@ async function monitorWorkflowRun(repositoryName: string, runId: string): Promis
           else {
             process.stdout.write('\n')
             process.stdout.write(`❌ ${chalk.red.bold('Publishing workflow failed')}\n`)
-            process.stdout.write(`🔗 View details: https://github.com/${repositoryName}/actions/runs/${runId}\n`)
+            process.stdout.write(`🔗 View details: https://github.com/${repositoryName}/actions/runs/${runNumber}\n`)
           }
         }
       }
