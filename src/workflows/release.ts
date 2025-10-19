@@ -14,7 +14,7 @@ async function detectCloudflareSetup(): Promise<boolean> {
     const fs = await import('node:fs/promises')
     // Check for wrangler.toml, wrangler.json, or wrangler.jsonc
     const wranglerFiles = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc']
-    
+
     for (const file of wranglerFiles) {
       try {
         await fs.access(file)
@@ -24,7 +24,7 @@ async function detectCloudflareSetup(): Promise<boolean> {
         // Continue to next file
       }
     }
-    
+
     return false
   }
   catch {
@@ -32,12 +32,11 @@ async function detectCloudflareSetup(): Promise<boolean> {
   }
 }
 
-
 export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
   // Interactive deployment configuration - ask about Cloudflare only
   if (!options.nonInteractive && options.skipCloudflare === undefined) {
     const hasCloudflare = await detectCloudflareSetup()
-    
+
     if (hasCloudflare) {
       process.stdout.write('\n')
       process.stdout.write('╔══════════════════════════════════════════════════════════╗\n')
@@ -58,7 +57,7 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       }) as { deployToCloudflare: boolean }
 
       options.skipCloudflare = !response.deployToCloudflare
-      
+
       // Show configuration summary
       process.stdout.write('\n')
       process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
@@ -373,10 +372,10 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
       title: 'Deployment configuration',
       task: async (ctx, helpers) => {
         const deployments = []
-        
+
         if (!options.skipCloudflare)
           deployments.push('Cloudflare')
-        
+
         const summary = deployments.length > 0
           ? `Will deploy to: ${deployments.join(', ')}`
           : 'Cloudflare deployment skipped'
@@ -563,7 +562,6 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
         }
       },
     },
-
 
     // GitHub Release (triggers npm publishing via GitHub Actions)
     {

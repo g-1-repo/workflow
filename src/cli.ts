@@ -80,7 +80,6 @@ program
         console.log(chalk.cyan(`  Cloudflare:  ${chalk.green('✓ Deployed')}`))
       }
 
-
       console.log(chalk.dim('─'.repeat(50)))
       console.log()
     }
