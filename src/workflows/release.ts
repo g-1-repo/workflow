@@ -9,29 +9,7 @@ import chalk from 'chalk'
 import { execa } from 'execa'
 import * as semver from 'semver'
 
-// Detection functions
-async function detectCloudflareSetup(): Promise<boolean> {
-  try {
-    const fs = await import('node:fs/promises')
-    // Check for wrangler.toml, wrangler.json, or wrangler.jsonc
-    const wranglerFiles = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc']
-
-    for (const file of wranglerFiles) {
-      try {
-        await fs.access(file)
-        return true
-      }
-      catch {
-        // Continue to next file
-      }
-    }
-
-    return false
-  }
-  catch {
-    return false
-  }
-}
+// Detection functions (detectCloudflareSetup moved to exports below)
 
 export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<boolean> {
   try {
@@ -91,40 +69,33 @@ export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<
   }
 }
 
-export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
-  // Interactive deployment configuration - ask about Cloudflare only
-  if (!options.nonInteractive && options.skipCloudflare === undefined) {
-    const hasCloudflare = await detectCloudflareSetup()
-
-    if (hasCloudflare) {
-      process.stdout.write('\n')
-      process.stdout.write('╔══════════════════════════════════════════════════════════╗\n')
-      process.stdout.write('║                 DEPLOYMENT CONFIGURATION                 ║\n')
-      process.stdout.write('╚══════════════════════════════════════════════════════════╝\n')
-      process.stdout.write('\n')
-      process.stdout.write('\x1B[1m\x1B[36m→ Cloudflare Deployment Configuration\x1B[0m\n')
-      process.stdout.write('  Configure Cloudflare Workers deployment for this release\n')
-      process.stdout.write('\n')
-
-      const enquirer = await import('enquirer')
-      const response = await enquirer.default.prompt({
-        type: 'confirm',
-        name: 'deployToCloudflare',
-        message: '  Deploy to Cloudflare?',
-        initial: true,
-        prefix: '  ',
-      }) as { deployToCloudflare: boolean }
-
-      options.skipCloudflare = !response.deployToCloudflare
-
-      // Show configuration summary
-      process.stdout.write('\n')
-      process.stdout.write('\x1B[2m────────────────────────────────────────────────────────────────\x1B[0m\n')
-      process.stdout.write('\x1B[1mConfiguration Summary:\x1B[0m\n')
-      process.stdout.write(`  Cloudflare Deploy: ${options.skipCloudflare ? '\x1B[31mSkipped\x1B[0m' : '\x1B[32mEnabled\x1B[0m'}\n`)
-      process.stdout.write(`  npm Publishing: \x1B[33mVia GitHub Actions\x1B[0m (automatic on release)\n`)
-      process.stdout.write('\n')
+export async function detectCloudflareSetup(): Promise<boolean> {
+  try {
+    const fs = await import('node:fs/promises')
+    // Check for wrangler.toml, wrangler.json, or wrangler.jsonc
+    const wranglerFiles = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc']
+    
+    for (const file of wranglerFiles) {
+      try {
+        await fs.access(file)
+        return true
+      }
+      catch {
+        // Continue to next file
+      }
     }
+    
+    return false
+  }
+  catch {
+    return false
+  }
+}
+
+export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
+  // Skip Cloudflare deployment during main workflow - will prompt after completion
+  if (options.skipCloudflare === undefined) {
+    options.skipCloudflare = true
   }
 
   // Handle uncommitted changes upfront (before workflow starts)
@@ -968,4 +939,47 @@ async function checkNpmPackage(repositoryName: string): Promise<void> {
   }
 
   process.stdout.write('\n')
+}
+
+// =============================================================================
+// Cloudflare Deployment
+// =============================================================================
+
+export async function deployToCloudflare(): Promise<void> {
+  try {
+    process.stdout.write('\n')
+    process.stdout.write(chalk.cyan('╔════════════════════════════════════════════════════════════════╗\n'))
+    process.stdout.write(chalk.cyan('║                    CLOUDFLARE DEPLOYMENT                     ║\n'))
+    process.stdout.write(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\n'))
+    process.stdout.write('\n')
+    process.stdout.write('🚀 Deploying to Cloudflare Workers...\n')
+    
+    const result = await execa('npx', ['wrangler', 'deploy'], { stdio: 'inherit' })
+    
+    process.stdout.write('\n')
+    process.stdout.write(`🎉 ${chalk.green.bold('Cloudflare deployment completed successfully!')}\n`)
+    process.stdout.write('\n')
+  }
+  catch (error) {
+    process.stdout.write('\n')
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    
+    if (errorMessage.includes('Missing entry-point')) {
+      process.stdout.write(`❌ ${chalk.red.bold('Deployment failed: No wrangler config found')}\n`)
+      process.stdout.write('📝 Check your wrangler.toml or wrangler.json configuration\n')
+    }
+    else if (errorMessage.includes('not authenticated')) {
+      process.stdout.write(`❌ ${chalk.red.bold('Deployment failed: Not authenticated')}\n`)
+      process.stdout.write('📝 Run: npx wrangler login\n')
+    }
+    else if (errorMessage.includes('wrangler: command not found')) {
+      process.stdout.write(`❌ ${chalk.red.bold('Deployment failed: Wrangler not installed')}\n`)
+      process.stdout.write('📝 Install: npm install -g wrangler\n')
+    }
+    else {
+      process.stdout.write(`❌ ${chalk.red.bold('Deployment failed')}\n`)
+      process.stdout.write(`⚠️  Error: ${errorMessage.slice(0, 100)}...\n`)
+    }
+    process.stdout.write('\n')
+  }
 }
