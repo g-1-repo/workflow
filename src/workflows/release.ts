@@ -72,10 +72,14 @@ export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<
       ], { stdio: 'pipe' })
 
       const workflows = JSON.parse(result.stdout)
-      return workflows.some((workflow: any) =>
-        workflow.name?.toLowerCase().includes('publish')
-        || workflow.name?.toLowerCase().includes('npm'),
-      )
+      return workflows.some((workflow: any) => {
+        const name = workflow.name?.toLowerCase() || ''
+        return name.includes('publish') && name.includes('npm') ||
+               name === 'publish to npm' ||
+               name === 'npm publish' ||
+               name === 'publish npm' ||
+               name === 'npm'
+      })
     }
     catch {
       // If GitHub CLI fails, assume no publishing workflows
