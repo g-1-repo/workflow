@@ -9,7 +9,7 @@ import process from 'node:process'
 import chalk from 'chalk'
 import { program } from 'commander'
 import { createTaskEngine } from './core/task-engine.js'
-import { createReleaseWorkflow } from './workflows/release.js'
+import { createReleaseWorkflow, watchGitHubActions } from './workflows/release.js'
 // Version from package.json
 const version = '2.0.1'
 
@@ -82,6 +82,23 @@ program
 
       console.log(chalk.dim('─'.repeat(50)))
       console.log()
+
+      // GitHub Actions monitoring prompt (skip in dry-run mode)
+      if (!options.dryRun && !options.nonInteractive && context.git?.repository && context.version?.next) {
+        const enquirer = await import('enquirer')
+        const response = await enquirer.default.prompt({
+          type: 'confirm',
+          name: 'watchActions',
+          message: '🔍 Watch GitHub Actions for npm publishing?',
+          initial: true,
+          prefix: '  ',
+        }) as { watchActions: boolean }
+
+        if (response.watchActions) {
+          const tagName = `v${context.version.next}`
+          await watchGitHubActions(context.git.repository, tagName)
+        }
+      }
     }
     catch (error) {
       console.log()

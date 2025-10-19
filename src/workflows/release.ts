@@ -7,6 +7,7 @@ import process from 'node:process'
 import { createGitOperations } from '@g-1/util/node'
 import { execa } from 'execa'
 import * as semver from 'semver'
+import chalk from 'chalk'
 
 // Detection functions
 async function detectCloudflareSetup(): Promise<boolean> {
@@ -685,4 +686,159 @@ function generateReleaseNotes(commits: any[], version: string): string {
   }
 
   return notes
+}
+
+// =============================================================================
+// GitHub Actions Monitoring
+// =============================================================================
+
+export async function watchGitHubActions(repositoryName: string, tagName: string): Promise<void> {
+  try {
+    process.stdout.write('\n')
+    process.stdout.write('╔════════════════════════════════════════════════════════════════╗\n')
+    process.stdout.write('║                    GITHUB ACTIONS MONITOR                    ║\n')
+    process.stdout.write('╚════════════════════════════════════════════════════════════════╝\n')
+    process.stdout.write('\n')
+    process.stdout.write(`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`)
+    process.stdout.write('\n')
+
+    let foundPublishingWorkflow = false
+    let maxAttempts = 30 // Wait up to 30 seconds for workflow to start
+    let attempts = 0
+
+    // Wait for publishing workflow to start
+    while (!foundPublishingWorkflow && attempts < maxAttempts) {
+      try {
+        const result = await execa('gh', [
+          'run', 'list',
+          '--repo', repositoryName,
+          '--event', 'release',
+          '--limit', '5',
+          '--json', 'status,name,workflowName,createdAt,id'
+        ], { stdio: 'pipe' })
+
+        const runs = JSON.parse(result.stdout)
+        const recentPublishRun = runs.find((run: any) => 
+          run.workflowName?.toLowerCase().includes('publish') ||
+          run.workflowName?.toLowerCase().includes('npm') ||
+          run.name?.includes(tagName)
+        )
+
+        if (recentPublishRun) {
+          foundPublishingWorkflow = true
+          process.stdout.write(`✅ Found publishing workflow: ${chalk.green(recentPublishRun.workflowName)}\n`)
+          process.stdout.write(`🔗 Run ID: ${chalk.gray(recentPublishRun.id)}\n`)
+          process.stdout.write('\n')
+
+          // Monitor the specific run
+          await monitorWorkflowRun(repositoryName, recentPublishRun.id)
+          return
+        }
+        
+        process.stdout.write(`⏳ Waiting for publishing workflow to start... (${attempts + 1}/${maxAttempts})\r`)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        attempts++
+      }
+      catch (error) {
+        process.stdout.write(`\n⚠️  Error checking workflows: ${error instanceof Error ? error.message : String(error)}\n`)
+        break
+      }
+    }
+
+    if (!foundPublishingWorkflow) {
+      process.stdout.write(`\n🔕 No publishing workflow found within ${maxAttempts} seconds\n`)
+      process.stdout.write('📝 This might mean:\n')
+      process.stdout.write('  • No GitHub Actions configured for npm publishing\n')
+      process.stdout.write('  • Publishing workflow uses a different trigger\n')
+      process.stdout.write('  • Workflow is still starting (check GitHub manually)\n')
+      process.stdout.write('\n')
+    }
+  }
+  catch (error) {
+    process.stdout.write(`\n❌ Failed to monitor GitHub Actions: ${error instanceof Error ? error.message : String(error)}\n`)
+    if (error instanceof Error && error.message.includes('gh: command not found')) {
+      process.stdout.write('📝 Install GitHub CLI: https://cli.github.com/\n')
+    }
+  }
+}
+
+async function monitorWorkflowRun(repositoryName: string, runId: string): Promise<void> {
+  let isCompleted = false
+  let lastStatus = ''
+  
+  while (!isCompleted) {
+    try {
+      const result = await execa('gh', [
+        'run', 'view', runId,
+        '--repo', repositoryName,
+        '--json', 'status,conclusion,jobs'
+      ], { stdio: 'pipe' })
+
+      const runData = JSON.parse(result.stdout)
+      
+      if (runData.status !== lastStatus) {
+        lastStatus = runData.status
+        
+        if (runData.status === 'in_progress') {
+          process.stdout.write(`🏃 Publishing workflow is running...\n`)
+          
+          // Show job progress
+          if (runData.jobs && runData.jobs.length > 0) {
+            for (const job of runData.jobs) {
+              const statusIcon = job.conclusion === 'success' ? '✅' : 
+                               job.conclusion === 'failure' ? '❌' : 
+                               job.status === 'in_progress' ? '🔄' : '⏳'
+              process.stdout.write(`  ${statusIcon} ${job.name}\n`)
+            }
+          }
+        }
+        else if (runData.status === 'completed') {
+          isCompleted = true
+          
+          if (runData.conclusion === 'success') {
+            process.stdout.write('\n')
+            process.stdout.write(`🎉 ${chalk.green.bold('Publishing workflow completed successfully!')}\n`)
+            
+            // Check if npm package is available
+            process.stdout.write('🔍 Verifying npm package availability...\n')
+            await checkNpmPackage(repositoryName)
+          }
+          else {
+            process.stdout.write('\n')
+            process.stdout.write(`❌ ${chalk.red.bold('Publishing workflow failed')}\n`)
+            process.stdout.write(`🔗 View details: https://github.com/${repositoryName}/actions/runs/${runId}\n`)
+          }
+        }
+      }
+      
+      if (!isCompleted) {
+        await new Promise(resolve => setTimeout(resolve, 3000)) // Check every 3 seconds
+      }
+    }
+    catch (error) {
+      process.stdout.write(`\n⚠️  Error monitoring workflow: ${error instanceof Error ? error.message : String(error)}\n`)
+      break
+    }
+  }
+}
+
+async function checkNpmPackage(repositoryName: string): Promise<void> {
+  try {
+    // Extract package name from repository (assume @org/repo format)
+    const packageName = repositoryName.includes('/') 
+      ? `@${repositoryName.replace('/', '/')}`
+      : repositoryName
+    
+    const result = await execa('npm', ['view', packageName, 'version'], { stdio: 'pipe' })
+    const version = result.stdout.trim()
+    
+    process.stdout.write(`✅ Package ${chalk.cyan(packageName)}@${chalk.green(version)} is now available on npm!\n`)
+    process.stdout.write('\n')
+    process.stdout.write(`📦 Install with: ${chalk.gray(`npm install ${packageName}`)}\n`)
+  }
+  catch {
+    process.stdout.write('⚠️  Could not verify npm package (this is normal for non-npm packages)\n')
+  }
+  
+  process.stdout.write('\n')
 }
