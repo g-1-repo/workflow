@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.17.0] - 2025-10-19
+
+### Features
+
+- improve GitHub Actions monitoring for completed workflows
+
+### Bug Fixes
+
+- use lint:fix in GitHub Actions publish workflow
+
+
 ## [2.16.0] - 2025-10-19
 
 ### Features
