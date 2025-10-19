@@ -10,8 +10,19 @@ import chalk from 'chalk'
 import { program } from 'commander'
 import { createTaskEngine } from './core/task-engine.js'
 import { createReleaseWorkflow, hasNpmPublishingWorkflow, watchGitHubActions } from './workflows/release.js'
-// Version from package.json
-const version = '2.0.1'
+
+// Load version from package.json
+function getVersion(): string {
+  try {
+    const fs = require('node:fs')
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
+    return packageJson.version || 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
+const version = getVersion()
 
 program
   .name('workflow')

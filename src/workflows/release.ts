@@ -74,11 +74,11 @@ export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<
       const workflows = JSON.parse(result.stdout)
       return workflows.some((workflow: any) => {
         const name = workflow.name?.toLowerCase() || ''
-        return name.includes('publish') && name.includes('npm') ||
-               name === 'publish to npm' ||
-               name === 'npm publish' ||
-               name === 'publish npm' ||
-               name === 'npm'
+        return name.includes('publish') && name.includes('npm')
+          || name === 'publish to npm'
+          || name === 'npm publish'
+          || name === 'publish npm'
+          || name === 'npm'
       })
     }
     catch {
