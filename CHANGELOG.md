@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.13.0] - 2025-10-19
+
+### Features
+
+- add NPM publish workflow and update G1 package config (#16)
+
+### Other Changes
+
+- docs: update branding to G1 and npm scope to @g-1/workflow (#14)
+- chore(ci): add GitHub Actions (CI + Release), Dependabot; update repo URLs (#1)
+
+
 ## [2.12.14] - 2025-10-18
 
 ### Other Changes
