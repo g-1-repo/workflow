@@ -236,6 +236,7 @@ export interface TaskEngineOptions {
   exitOnError?: boolean
   showTimer?: boolean
   clearOutput?: boolean
+  autoRecovery?: boolean
 }
 
 // =============================================================================

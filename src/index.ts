@@ -4,6 +4,10 @@
  * Main library exports for programmatic usage
  */
 
+export { ErrorFormatter } from './core/error-formatter.js'
+export type { FormattedError } from './core/error-formatter.js'
+export { ErrorRecoveryService } from './core/error-recovery.js'
+export type { ErrorAnalysis } from './core/error-recovery.js'
 // Core exports
 export { createTaskEngine, TaskEngine } from './core/task-engine.js'
 // Type exports

@@ -205,6 +205,31 @@ program
     console.log(chalk.gray('• Auto-merge and cleanup'))
   })
 
+// Test error recovery command
+program
+  .command('test-error-recovery')
+  .description('🧪 Test automated error recovery system with sample errors')
+  .option('--direct', 'Test error recovery directly without triggering a workflow')
+  .action(async (options) => {
+    try {
+      const { testErrorRecovery, testErrorRecoveryDirectly } = await import('./test-error-recovery.js')
+
+      if (options.direct) {
+        await testErrorRecoveryDirectly()
+      }
+      else {
+        await testErrorRecovery()
+      }
+    }
+    catch (error) {
+      console.log(chalk.red('❌ Error recovery test failed'))
+      if (error instanceof Error) {
+        console.log(chalk.red(error.message))
+      }
+      process.exit(1)
+    }
+  })
+
 // Status command
 program
   .command('status')
@@ -213,9 +238,14 @@ program
     console.log(chalk.cyan.bold('📊 G1 Workflow Status'))
     console.log(chalk.green(`✅ V2 Core: Task Engine with listr2`))
     console.log(chalk.green(`✅ V2 Release: Complete Git → Cloudflare → npm pipeline`))
+    console.log(chalk.green(`✅ V2 Error Recovery: Automated error fixing system`))
     console.log(chalk.yellow(`🚧 V2 Feature: Branch management (coming soon)`))
     console.log(chalk.yellow(`🚧 V2 Config: Smart configuration system (coming soon)`))
     console.log(chalk.gray(`📦 Version: ${version}`))
+    console.log()
+    console.log(chalk.cyan.bold('🧪 Test Commands'))
+    console.log(chalk.gray(`  workflow test-error-recovery     Test error recovery with sample workflow`))
+    console.log(chalk.gray(`  workflow test-error-recovery --direct    Test error recovery directly`))
   })
 
 // Error handling

@@ -8,7 +8,10 @@ import type {
   WorkflowContext,
   WorkflowStep,
 } from '../types/index.js'
+import chalk from 'chalk'
 import { Listr } from 'listr2'
+import { ErrorFormatter } from './error-formatter.js'
+import { ErrorRecoveryService } from './error-recovery.js'
 
 export class TaskEngine {
   constructor(private options: TaskEngineOptions = {}) {}
@@ -28,6 +31,19 @@ export class TaskEngine {
         showErrorMessage: true,
         showTimer: this.options.showTimer ?? true,
         clearOutput: this.options.clearOutput ?? false,
+        // Enhanced error styling
+        formatOutput: 'wrap',
+        removeEmptyLines: false,
+        indentation: 2,
+        // Custom icons and colors for better error visibility
+        icon: {
+          COMPLETED: '✓',
+          FAILED: '✗', // Red X for failures
+          PAUSED: '⏸',
+          ROLLING_BACK: '↶',
+          SKIPPED: '↷',
+          STARTED: '⧖',
+        },
       },
       ctx: context as ListrContext,
     })
@@ -38,8 +54,33 @@ export class TaskEngine {
     }
     catch (error) {
       if (error instanceof Error) {
-        // Pass through the original error message for better debugging
-        throw new Error(error.message)
+        // Enhanced error formatting with red styling
+        const formattedError = ErrorFormatter.formatPublishingFailure(error.message)
+        console.error(formattedError)
+
+        // Create detailed error box for critical workflow failures
+        const errorBox = ErrorFormatter.createErrorBox(
+          'WORKFLOW EXECUTION FAILED',
+          error.message,
+          [
+            'Check the error details above',
+            'Run with --verbose for more information',
+            'Consider running automated error recovery',
+          ],
+        )
+        console.error(errorBox)
+
+        // Trigger automated error recovery if enabled
+        if (this.options.autoRecovery !== false) {
+          console.log(chalk.cyan('\n🔧 Starting automated error recovery...'))
+          const recoveryService = ErrorRecoveryService.getInstance()
+          await recoveryService.executeRecovery(error, context as WorkflowContext)
+        }
+
+        // Throw enhanced error for upstream handling
+        const enhancedError = new Error(error.message)
+        enhancedError.name = 'WorkflowExecutionError'
+        throw enhancedError
       }
       throw error
     }
