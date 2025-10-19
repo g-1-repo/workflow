@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.13.1] - 2025-10-19
+
+### Bug Fixes
+
+- update import statements from @go-corp/utils to @g-1/util
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.13.0] - 2025-10-19
 
 ### Features
