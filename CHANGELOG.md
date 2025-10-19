@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.19.5] - 2025-10-19
+
+### Bug Fixes
+
+- automated lint error fixes
+- automated lint error fixes
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.19.4] - 2025-10-19
 
 ### Other Changes
