@@ -9,7 +9,7 @@ import process from 'node:process'
 import chalk from 'chalk'
 import { program } from 'commander'
 import { createTaskEngine } from './core/task-engine.js'
-import { createReleaseWorkflow, hasNpmPublishingWorkflow, watchGitHubActions, detectCloudflareSetup, deployToCloudflare } from './workflows/release.js'
+import { createReleaseWorkflow, deployToCloudflare, detectCloudflareSetup, hasNpmPublishingWorkflow, watchGitHubActions } from './workflows/release.js'
 
 // Load version from package.json
 function getVersion(): string {
@@ -17,7 +17,8 @@ function getVersion(): string {
     const fs = require('node:fs')
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
     return packageJson.version || 'unknown'
-  } catch {
+  }
+  catch {
     return 'unknown'
   }
 }
@@ -123,7 +124,7 @@ program
       if (!options.dryRun && !options.nonInteractive) {
         // Check if this repository has Cloudflare setup
         const hasCloudflare = await detectCloudflareSetup()
-        
+
         if (hasCloudflare) {
           const enquirer = await import('enquirer')
           const response = await enquirer.default.prompt({

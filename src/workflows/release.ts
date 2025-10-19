@@ -2,12 +2,12 @@
  * Complete Release Workflow - Git → Cloudflare → GitHub Release (triggers npm via Actions)
  */
 
+import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
+import process from 'node:process'
 import { createGitOperations } from '@g-1/util/node'
 import chalk from 'chalk'
 import { execa } from 'execa'
-import process from 'node:process'
 import * as semver from 'semver'
-import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 
 // Detection functions (detectCloudflareSetup moved to exports below)
 
@@ -728,7 +728,7 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
     process.stdout.write('║                    GITHUB ACTIONS MONITOR                      ║\n')
     process.stdout.write('╚════════════════════════════════════════════════════════════════╝\n')
     process.stdout.write('\n')
-    process.stdout.write(`🔍 Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`)
+    process.stdout.write(`Watching for publishing workflow triggered by ${chalk.cyan(tagName)}...\n`)
     process.stdout.write('\n')
 
     let foundPublishingWorkflow = false
@@ -769,14 +769,14 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
 
         if (recentPublishRun) {
           foundPublishingWorkflow = true
-          process.stdout.write(`✅ Found publishing workflow: ${chalk.green(recentPublishRun.workflowName)}\n`)
-          process.stdout.write(`🔗 Run #: ${chalk.gray(recentPublishRun.number)}\n`)
-          process.stdout.write(`🕰️ Created: ${chalk.gray(new Date(recentPublishRun.createdAt).toLocaleTimeString())}\n`)
+          process.stdout.write(`✓ Found publishing workflow: ${chalk.green(recentPublishRun.workflowName)}\n`)
+          process.stdout.write(`  Run #: ${chalk.gray(recentPublishRun.number)}\n`)
+          process.stdout.write(`  Created: ${chalk.gray(new Date(recentPublishRun.createdAt).toLocaleTimeString())}\n`)
           process.stdout.write('\n')
 
           // If workflow is already completed, show results immediately
           if (recentPublishRun.status === 'completed') {
-            process.stdout.write(`📊 Status: ${chalk.green('Completed')} (already finished)\n`)
+            process.stdout.write(`✓ Status: ${chalk.green('Completed')} (already finished)\n`)
             await showCompletedWorkflowResults(repositoryName, recentPublishRun.databaseId)
           }
           else {
@@ -786,29 +786,29 @@ export async function watchGitHubActions(repositoryName: string, tagName: string
           return
         }
 
-        process.stdout.write(`⏳ Waiting for publishing workflow to start... (${attempts + 1}/${maxAttempts})\r`)
+        process.stdout.write(`⧖ Waiting for publishing workflow to start... (${attempts + 1}/${maxAttempts})\r`)
         await new Promise(resolve => setTimeout(resolve, 1000))
         attempts++
       }
       catch (error) {
-        process.stdout.write(`\n⚠️  Error checking workflows: ${error instanceof Error ? error.message : String(error)}\n`)
+        process.stdout.write(`\nError checking workflows: ${error instanceof Error ? error.message : String(error)}\n`)
         break
       }
     }
 
     if (!foundPublishingWorkflow) {
-      process.stdout.write(`\n🔕 No publishing workflow found within ${maxAttempts} seconds\n`)
-      process.stdout.write('📝 This might mean:\n')
-      process.stdout.write('  • No GitHub Actions configured for npm publishing\n')
-      process.stdout.write('  • Publishing workflow uses a different trigger\n')
-      process.stdout.write('  • Workflow is still starting (check GitHub manually)\n')
+      process.stdout.write(`\nNo publishing workflow found within ${maxAttempts} seconds\n`)
+      process.stdout.write('This might mean:\n')
+      process.stdout.write('  - No GitHub Actions configured for npm publishing\n')
+      process.stdout.write('  - Publishing workflow uses a different trigger\n')
+      process.stdout.write('  - Workflow is still starting (check GitHub manually)\n')
       process.stdout.write('\n')
     }
   }
   catch (error) {
-    process.stdout.write(`\n❌ Failed to monitor GitHub Actions: ${error instanceof Error ? error.message : String(error)}\n`)
+    process.stdout.write(`\nFailed to monitor GitHub Actions: ${error instanceof Error ? error.message : String(error)}\n`)
     if (error instanceof Error && error.message.includes('gh: command not found')) {
-      process.stdout.write('📝 Install GitHub CLI: https://cli.github.com/\n')
+      process.stdout.write('Install GitHub CLI: https://cli.github.com/\n')
     }
   }
 }
@@ -835,16 +835,16 @@ async function monitorWorkflowRun(repositoryName: string, runNumber: string | nu
         lastStatus = runData.status
 
         if (runData.status === 'in_progress') {
-          process.stdout.write(`🏃 Publishing workflow is running...\n`)
+          process.stdout.write(`⧖ Publishing workflow is running...\n`)
 
           // Show job progress
           if (runData.jobs && runData.jobs.length > 0) {
             for (const job of runData.jobs) {
               const statusIcon = job.conclusion === 'success'
-                ? '✅'
+                ? '✓'
                 : job.conclusion === 'failure'
-                  ? '❌'
-                  : job.status === 'in_progress' ? '🔄' : '⏳'
+                  ? '✗'
+                  : job.status === 'in_progress' ? '⧖' : '-'
               process.stdout.write(`  ${statusIcon} ${job.name}\n`)
             }
           }
@@ -854,16 +854,16 @@ async function monitorWorkflowRun(repositoryName: string, runNumber: string | nu
 
           if (runData.conclusion === 'success') {
             process.stdout.write('\n')
-            process.stdout.write(`🎉 ${chalk.green.bold('Publishing workflow completed successfully!')}\n`)
+            process.stdout.write(`✓ ${chalk.green.bold('Publishing workflow completed successfully!')}\n`)
 
             // Check if npm package is available
-            process.stdout.write('🔍 Verifying npm package availability...\n')
+            process.stdout.write('⧖ Verifying npm package availability...\n')
             await checkNpmPackage(repositoryName)
           }
           else {
             process.stdout.write('\n')
-            process.stdout.write(`❌ ${chalk.red.bold('Publishing workflow failed')}\n`)
-            process.stdout.write(`🔗 View details: https://github.com/${repositoryName}/actions/runs/${runNumber}\n`)
+            process.stdout.write(`✗ ${chalk.red.bold('Publishing workflow failed')}\n`)
+            process.stdout.write(`View details: https://github.com/${repositoryName}/actions/runs/${runNumber}\n`)
           }
         }
       }
@@ -873,7 +873,7 @@ async function monitorWorkflowRun(repositoryName: string, runNumber: string | nu
       }
     }
     catch (error) {
-      process.stdout.write(`\n⚠️  Error monitoring workflow: ${error instanceof Error ? error.message : String(error)}\n`)
+      process.stdout.write(`\nError monitoring workflow: ${error instanceof Error ? error.message : String(error)}\n`)
       break
     }
   }
@@ -895,28 +895,28 @@ async function showCompletedWorkflowResults(repositoryName: string, runId: strin
 
     if (runData.conclusion === 'success') {
       process.stdout.write('\n')
-      process.stdout.write(`🎉 ${chalk.green.bold('Publishing workflow completed successfully!')}\n`)
+      process.stdout.write(`✓ ${chalk.green.bold('Publishing workflow completed successfully!')}\n`)
 
       // Show job results
       if (runData.jobs && runData.jobs.length > 0) {
         for (const job of runData.jobs) {
-          const statusIcon = job.conclusion === 'success' ? '✅' : '❌'
+          const statusIcon = job.conclusion === 'success' ? '✓' : '✗'
           process.stdout.write(`  ${statusIcon} ${job.name}\n`)
         }
       }
 
       // Check if npm package is available
-      process.stdout.write('\n🔍 Verifying npm package availability...\n')
+      process.stdout.write('\n⧖ Verifying npm package availability...\n')
       await checkNpmPackage(repositoryName)
     }
     else {
       process.stdout.write('\n')
-      process.stdout.write(`❌ ${chalk.red.bold('Publishing workflow failed')}\n`)
-      process.stdout.write(`🔗 View details: https://github.com/${repositoryName}/actions/runs/${runId}\n`)
+      process.stdout.write(`✗ ${chalk.red.bold('Publishing workflow failed')}\n`)
+      process.stdout.write(`View details: https://github.com/${repositoryName}/actions/runs/${runId}\n`)
     }
   }
   catch (error) {
-    process.stdout.write(`\n⚠️  Error getting workflow results: ${error instanceof Error ? error.message : String(error)}\n`)
+    process.stdout.write(`\nError getting workflow results: ${error instanceof Error ? error.message : String(error)}\n`)
   }
 }
 
@@ -930,12 +930,12 @@ async function checkNpmPackage(repositoryName: string): Promise<void> {
     const result = await execa('npm', ['view', packageName, 'version'], { stdio: 'pipe' })
     const version = result.stdout.trim()
 
-    process.stdout.write(`✅ Package ${chalk.cyan(packageName)}@${chalk.green(version)} is now available on npm!\n`)
+    process.stdout.write(`✓ Package ${chalk.cyan(packageName)}@${chalk.green(version)} is now available on npm!\n`)
     process.stdout.write('\n')
-    process.stdout.write(`📦 Install with: ${chalk.gray(`npm install ${packageName}`)}\n`)
+    process.stdout.write(`Install with: ${chalk.gray(`npm install ${packageName}`)}\n`)
   }
   catch {
-    process.stdout.write('⚠️  Could not verify npm package (this is normal for non-npm packages)\n')
+    process.stdout.write('Could not verify npm package (this is normal for non-npm packages)\n')
   }
 
   process.stdout.write('\n')
