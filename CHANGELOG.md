@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.19.0] - 2025-10-19
+
+### Features
+
+- move Cloudflare deployment to post-release prompt
+
+### Bug Fixes
+
+- load CLI version dynamically from package.json
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.18.0] - 2025-10-19
 
 ### Features
