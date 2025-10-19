@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.18.0] - 2025-10-19
+
+### Features
+
+- smart detection of npm publishing workflows
+
+### Bug Fixes
+
+- improve npm workflow detection specificity
+
+
 ## [2.17.4] - 2025-10-19
 
 
