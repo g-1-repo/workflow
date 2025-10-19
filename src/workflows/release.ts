@@ -942,22 +942,42 @@ async function monitorRunningWorkflow(repositoryName: string, runId: string | nu
 
 async function checkNpmPackageWithHelpers(repositoryName: string, helpers: any): Promise<void> {
   try {
-    // Extract package name from repository
-    const packageName = repositoryName.includes('/')
-      ? `@${repositoryName.replace('/', '/')}`
-      : repositoryName
-
+    // First try to get the actual package name from package.json
+    let packageName: string
+    
+    try {
+      const fs = await import('node:fs/promises')
+      const packageJson = JSON.parse(await fs.readFile('package.json', 'utf-8'))
+      packageName = packageJson.name
+    } catch {
+      // Fallback: Extract package name from repository name
+      // Convert "owner/repo" to "@owner/repo" format
+      packageName = repositoryName.includes('/')
+        ? `@${repositoryName}`  // Don't replace, just add @
+        : repositoryName
+    }
+    
     helpers.setOutput(`Checking ${packageName}...`)
-
+    
     const result = await execa('npm', ['view', packageName, 'version'], { stdio: 'pipe' })
     const version = result.stdout.trim()
-
+    
     helpers.setTitle(`Verify npm package availability - ✅ ${packageName}@${version}`)
     helpers.setOutput(`Package is available! Install with: npm install ${packageName}`)
-  }
-  catch {
-    helpers.setTitle('Verify npm package availability - ⚠️ Package not found')
-    helpers.setOutput('Package may not be published yet or repository name differs from package name')
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    
+    // Provide more helpful error messages
+    if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+      helpers.setTitle('Verify npm package availability - ⚠️ Package not found')
+      helpers.setOutput('Package may not be published yet or repository name differs from package name')
+    } else if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+      helpers.setTitle('Verify npm package availability - ⚠️ Network error')
+      helpers.setOutput('Could not connect to npm registry')
+    } else {
+      helpers.setTitle('Verify npm package availability - ⚠️ Verification failed')
+      helpers.setOutput(`Error: ${errorMessage}`)
+    }
   }
 }
 
