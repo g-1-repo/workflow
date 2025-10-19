@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (leave empty for package.json version)'
+        description: Version to publish (leave empty for package.json version)
         required: false
         type: string
 
