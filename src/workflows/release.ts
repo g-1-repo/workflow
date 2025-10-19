@@ -2,12 +2,12 @@
  * Complete Release Workflow - Git → Cloudflare → GitHub Release (triggers npm via Actions)
  */
 
+import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
+import process from 'node:process'
 import { createGitOperations } from '@g-1/util/node'
 import chalk from 'chalk'
 import { execa } from 'execa'
-import process from 'node:process'
 import * as semver from 'semver'
-import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 
 // Detection functions
 async function detectCloudflareSetup(): Promise<boolean> {
