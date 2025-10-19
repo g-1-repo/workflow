@@ -1,6 +1,6 @@
 {
   "name": "@g-1/workflow",
-  "version": "2.17.3",
+  "version": "2.17.4",
   "description": "G1 Pipeline Workflow. Enterprise-grade, release automation and workflow orchestration. Ensures high-velocity, consistent deployment across all G1 products and environments.",
   "license": "MIT",
   "homepage": "https://github.com/g-1-repo/workflow#readme",
