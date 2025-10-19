@@ -2,12 +2,12 @@
  * Complete Release Workflow - Git → Cloudflare → GitHub Release (triggers npm via Actions)
  */
 
-import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
-import process from 'node:process'
 import { createGitOperations } from '@g-1/util/node'
 import chalk from 'chalk'
 import { execa } from 'execa'
+import process from 'node:process'
 import * as semver from 'semver'
+import type { ReleaseOptions, WorkflowStep } from '../types/index.js'
 
 // Detection functions (detectCloudflareSetup moved to exports below)
 
@@ -74,7 +74,7 @@ export async function detectCloudflareSetup(): Promise<boolean> {
     const fs = await import('node:fs/promises')
     // Check for wrangler.toml, wrangler.json, or wrangler.jsonc
     const wranglerFiles = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc']
-    
+
     for (const file of wranglerFiles) {
       try {
         await fs.access(file)
@@ -84,7 +84,7 @@ export async function detectCloudflareSetup(): Promise<boolean> {
         // Continue to next file
       }
     }
-    
+
     return false
   }
   catch {
@@ -949,13 +949,13 @@ export async function deployToCloudflare(): Promise<void> {
   try {
     process.stdout.write('\n')
     process.stdout.write(chalk.cyan('╔════════════════════════════════════════════════════════════════╗\n'))
-    process.stdout.write(chalk.cyan('║                    CLOUDFLARE DEPLOYMENT                     ║\n'))
+    process.stdout.write(chalk.cyan('║                    CLOUDFLARE DEPLOYMENT                       ║\n'))
     process.stdout.write(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\n'))
     process.stdout.write('\n')
     process.stdout.write('🚀 Deploying to Cloudflare Workers...\n')
-    
+
     const result = await execa('npx', ['wrangler', 'deploy'], { stdio: 'inherit' })
-    
+
     process.stdout.write('\n')
     process.stdout.write(`🎉 ${chalk.green.bold('Cloudflare deployment completed successfully!')}\n`)
     process.stdout.write('\n')
@@ -963,7 +963,7 @@ export async function deployToCloudflare(): Promise<void> {
   catch (error) {
     process.stdout.write('\n')
     const errorMessage = error instanceof Error ? error.message : String(error)
-    
+
     if (errorMessage.includes('Missing entry-point')) {
       process.stdout.write(`❌ ${chalk.red.bold('Deployment failed: No wrangler config found')}\n`)
       process.stdout.write('📝 Check your wrangler.toml or wrangler.json configuration\n')
