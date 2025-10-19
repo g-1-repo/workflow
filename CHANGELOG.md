@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.19.2] - 2025-10-19
+
+### Bug Fixes
+
+- automated lint error fixes
+- automated lint error fixes
+- resolve linting errors causing GitHub Actions publishing failures
+
+
 ## [2.19.1] - 2025-10-19
 
 ### Other Changes
