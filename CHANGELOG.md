@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.2] - 2025-10-19
+
+### Other Changes
+
+- chore: commit changes before release
+
+
 ## [2.17.1] - 2025-10-19
 
 ### Other Changes
