@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.16.0] - 2025-10-19
+
+### Features
+
+- add GitHub Actions monitoring prompt after release
+
+### Bug Fixes
+
+- correct GitHub Actions API field usage
+
+
 ## [2.15.1] - 2025-10-19
 
 ### Other Changes
