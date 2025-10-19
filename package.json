@@ -1,6 +1,6 @@
 {
   "name": "@g-1/workflow",
-  "version": "2.19.5",
+  "version": "2.19.6",
   "description": "G1 Enterprise Workflow System. Badass, production-ready release automation that serves as the backbone for major development organizations. Features intelligent error recovery, beautiful UI, and enterprise-scale reliability.",
   "license": "MIT",
   "homepage": "https://github.com/g-1-repo/workflow#readme",
