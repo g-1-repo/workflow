@@ -1,10 +1,10 @@
-# @go-corp/workflow
+# @g-1/workflow
 
 🚀 **Enterprise-ready release automation and workflow orchestration**
 
 A powerful, type-safe CLI tool built for modern development teams that need consistent, reliable release processes across all their projects.
 
-[![npm version](https://badge.fury.io/js/%40go-corp%2Fworkflow.svg)](https://badge.fury.io/js/%40go-corp%2Fworkflow)
+[![npm version](https://badge.fury.io/js/%40g-1%2Fworkflow.svg)](https://badge.fury.io/js/%40g-1%2Fworkflow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
@@ -33,13 +33,13 @@ A powerful, type-safe CLI tool built for modern development teams that need cons
 
 ```bash
 # Install globally (recommended)
-bun install -g @go-corp/workflow
+bun install -g @g-1/workflow
 
 # Or use in project
-bun add --dev @go-corp/workflow
+bun add --dev @g-1/workflow
 
 # Also available via npm/yarn/pnpm
-npm install -g @go-corp/workflow
+npm install -g @g-1/workflow
 ```
 
 ### Basic Usage
@@ -88,7 +88,7 @@ Execute the complete release workflow with interactive configuration:
   ✔ Auto-fix linting issues - ✅ Fixed
   ✔ Type checking - ✅ Passed
   ✔ Running tests - ✅ No tests found (skipping)
-✔ Git repository analysis - ✅ golive-dev/workflow on main
+✔ Git repository analysis - ✅ g-1-repo/workflow on main
 ✔ Version calculation - ✅ 2.10.1 → 2.11.0 (minor)
 ✔ Deployment configuration - ✅ Will deploy to: npm
 ✔ Release execution
@@ -104,7 +104,7 @@ Execute the complete release workflow with interactive configuration:
 
 🎉 Release completed successfully!
 📦 Version: 2.10.1 → 2.11.0
-📂 Repository: golive-dev/workflow
+📂 Repository: g-1-repo/workflow
 ```
 
 **Options:**
@@ -137,7 +137,7 @@ Show project and workflow status.
 Use as a library in your Node.js applications:
 
 ```typescript
-import { createReleaseWorkflow, createTaskEngine, createWorkflow, quickRelease } from '@go-corp/workflow'
+import { createReleaseWorkflow, createTaskEngine, createWorkflow, quickRelease } from '@g-1/workflow'
 
 // Quick release with interactive prompts
 await quickRelease({ type: 'minor' })
@@ -243,13 +243,13 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 📄 License
 
-MIT © [Go Corp](https://github.com/go-corp)
+MIT © [G1](https://github.com/g-1-repo)
 
 ## 🆘 Support
 
-- 📖 [Documentation](https://github.com/go-corp/workflow/wiki)
-- 🐛 [Issue Tracker](https://github.com/go-corp/workflow/issues)
-- 💬 [Discussions](https://github.com/go-corp/workflow/discussions)
+- 📖 [Documentation](https://github.com/g-1-repo/workflow/wiki)
+- 🐛 [Issue Tracker](https://github.com/g-1-repo/workflow/issues)
+- 💬 [Discussions](https://github.com/g-1-repo/workflow/discussions)
 
 ---
 
