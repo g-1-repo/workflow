@@ -9,7 +9,7 @@ import process from 'node:process'
 import chalk from 'chalk'
 import { program } from 'commander'
 import { createTaskEngine } from './core/task-engine.js'
-import { createReleaseWorkflow, watchGitHubActions } from './workflows/release.js'
+import { createReleaseWorkflow, hasNpmPublishingWorkflow, watchGitHubActions } from './workflows/release.js'
 // Version from package.json
 const version = '2.0.1'
 
@@ -85,18 +85,26 @@ program
 
       // GitHub Actions monitoring prompt (skip in dry-run mode)
       if (!options.dryRun && !options.nonInteractive && context.git?.repository && context.version?.next) {
-        const enquirer = await import('enquirer')
-        const response = await enquirer.default.prompt({
-          type: 'confirm',
-          name: 'watchActions',
-          message: '🔍 Watch GitHub Actions for npm publishing?',
-          initial: true,
-          prefix: '  ',
-        }) as { watchActions: boolean }
+        // Check if this repository has npm publishing workflows
+        const hasPublishing = await hasNpmPublishingWorkflow(context.git.repository)
 
-        if (response.watchActions) {
-          const tagName = `v${context.version.next}`
-          await watchGitHubActions(context.git.repository, tagName)
+        if (hasPublishing) {
+          const enquirer = await import('enquirer')
+          const response = await enquirer.default.prompt({
+            type: 'confirm',
+            name: 'watchActions',
+            message: '🔍 Watch GitHub Actions for npm publishing?',
+            initial: true,
+            prefix: '  ',
+          }) as { watchActions: boolean }
+
+          if (response.watchActions) {
+            const tagName = `v${context.version.next}`
+            await watchGitHubActions(context.git.repository, tagName)
+          }
+        }
+        else {
+          console.log(chalk.dim('  📝 No npm publishing workflows detected - skipping monitoring prompt'))
         }
       }
     }

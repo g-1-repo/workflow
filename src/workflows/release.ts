@@ -33,6 +33,60 @@ async function detectCloudflareSetup(): Promise<boolean> {
   }
 }
 
+export async function hasNpmPublishingWorkflow(repositoryName: string): Promise<boolean> {
+  try {
+    // First check if .github/workflows directory exists locally
+    const fs = await import('node:fs/promises')
+    const workflowsPath = '.github/workflows'
+
+    try {
+      const files = await fs.readdir(workflowsPath)
+      const workflowFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'))
+
+      // Check each workflow file for npm publishing patterns
+      for (const file of workflowFiles) {
+        const content = await fs.readFile(`${workflowsPath}/${file}`, 'utf-8')
+        const hasNpmPublish = content.toLowerCase().includes('npm publish')
+          || content.toLowerCase().includes('registry.npmjs.org')
+          || content.toLowerCase().includes('npmjs_token')
+          || content.toLowerCase().includes('npm_token')
+
+        if (hasNpmPublish) {
+          return true
+        }
+      }
+    }
+    catch {
+      // Local .github/workflows doesn't exist, try GitHub API
+    }
+
+    // Fallback: Use GitHub CLI to check workflows in the repo
+    try {
+      const result = await execa('gh', [
+        'workflow',
+        'list',
+        '--repo',
+        repositoryName,
+        '--json',
+        'name',
+      ], { stdio: 'pipe' })
+
+      const workflows = JSON.parse(result.stdout)
+      return workflows.some((workflow: any) =>
+        workflow.name?.toLowerCase().includes('publish')
+        || workflow.name?.toLowerCase().includes('npm'),
+      )
+    }
+    catch {
+      // If GitHub CLI fails, assume no publishing workflows
+      return false
+    }
+  }
+  catch {
+    return false
+  }
+}
+
 export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promise<WorkflowStep[]> {
   // Interactive deployment configuration - ask about Cloudflare only
   if (!options.nonInteractive && options.skipCloudflare === undefined) {
