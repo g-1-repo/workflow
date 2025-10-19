@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.19.3] - 2025-10-19
+
+### Bug Fixes
+
+- automated lint error fixes
+
+
 ## [2.19.2] - 2025-10-19
 
 ### Bug Fixes
