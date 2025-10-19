@@ -1,15 +1,15 @@
 {
-  "name": "@go-corp/workflow",
+  "name": "@g-1/workflow",
   "version": "2.12.14",
-  "description": "Enterprise-ready release automation and workflow orchestration",
+  "description": "G1 Pipeline Workflow. Enterprise-grade, release automation and workflow orchestration. Ensures high-velocity, consistent deployment across all G1 products and environments.",
   "license": "MIT",
-  "homepage": "https://github.com/golive-dev/workflow#readme",
+  "homepage": "https://github.com/g-1-repo/workflow#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/golive-dev/workflow.git"
+    "url": "git+https://github.com/g-1-repo/workflow.git"
   },
   "bugs": {
-    "url": "https://github.com/golive-dev/workflow/issues"
+    "url": "https://github.com/g-1-repo/workflow/issues"
   },
   "keywords": [
     "workflow",
