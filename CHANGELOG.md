@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.19.1] - 2025-10-19
+
+### Other Changes
+
+- style: clean up GitHub Actions monitor with minimal styling
+
+
 ## [2.19.0] - 2025-10-19
 
 ### Features
