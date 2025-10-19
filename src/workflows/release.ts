@@ -192,26 +192,58 @@ export async function createReleaseWorkflow(options: ReleaseOptions = {}): Promi
           task: async (ctx, helpers) => {
             helpers.setOutput('Running lint with auto-fix...')
 
-            try {
-              await execa('bun', ['run', 'lint:fix'], { stdio: 'pipe' })
-              helpers.setTitle('Auto-fix linting issues - ✅ Fixed')
-            }
-            catch {
-              // Try npm fallback
+            // Define lint command priority order
+            const lintCommands: Array<[string, string[]]> = [
+              ['bun', ['run', 'lint:fix']],
+              ['npm', ['run', 'lint:fix']],
+              ['bunx', ['eslint', '.', '--fix']],
+              ['npx', ['eslint', '.', '--fix']],
+            ]
+
+            let _lastError: any = null
+            let commandWorked = false
+
+            for (const [command, args] of lintCommands) {
               try {
-                await execa('npm', ['run', 'lint:fix'], { stdio: 'pipe' })
-                helpers.setTitle('Auto-fix linting issues - ✅ Fixed with npm')
+                helpers.setOutput(`Trying ${command} ${args.join(' ')}...`)
+                await execa(command, args, { stdio: 'pipe' })
+                helpers.setTitle(`Auto-fix linting issues - ✅ Fixed (${command})`)
+                commandWorked = true
+                break // Success! Exit early
               }
-              catch {
-                // Try direct eslint
-                try {
-                  await execa('bunx', ['eslint', '.', '--fix'], { stdio: 'pipe' })
-                  helpers.setTitle('Auto-fix linting issues - ✅ Fixed with bunx')
+              catch (error) {
+                const errorOutput = error instanceof Error ? error.message : String(error)
+
+                // Check if it's a "script not found" or "command not found" error
+                if (errorOutput.includes('script not found')
+                  || errorOutput.includes('Missing script')
+                  || errorOutput.includes('command not found')
+                  || errorOutput.includes('not found')) {
+                  // Try next command
+                  _lastError = error
+                  continue
                 }
-                catch {
-                  helpers.setTitle('Auto-fix linting issues - ⚠️ No lint command found')
+
+                // If it's a linting failure (not a missing command), that's actually success
+                // because it means the command ran and tried to fix issues
+                if (errorOutput.includes('eslint')
+                  || errorOutput.includes('error')
+                  || errorOutput.includes('warning')
+                  || errorOutput.includes('problem')) {
+                  helpers.setTitle(`Auto-fix linting issues - ⚠️ Some issues remain (${command})`)
+                  helpers.setOutput('Lint command ran but some issues could not be auto-fixed')
+                  commandWorked = true
+                  break
                 }
+
+                // Store error and try next command
+                _lastError = error
               }
+            }
+
+            if (!commandWorked) {
+              helpers.setTitle('Auto-fix linting issues - ⚠️ No lint command available')
+              helpers.setOutput('Could not find eslint or lint:fix script')
             }
           },
         },
@@ -1003,59 +1035,6 @@ async function triggerErrorRecovery(repositoryName: string, runId: string | numb
   }
 }
 
-// =============================================================================
-// Automated Error Fixing
-// =============================================================================
-
-async function attemptAutomatedFix(repositoryName: string, runId: string | number): Promise<void> {
-  try {
-    process.stdout.write('\n')
-    process.stdout.write(chalk.cyan('╔════════════════════════════════════════════════════════════════╗\n'))
-    process.stdout.write(chalk.cyan('║                    AUTOMATED ERROR FIXING                    ║\n'))
-    process.stdout.write(chalk.cyan('╚════════════════════════════════════════════════════════════════╝\n'))
-    process.stdout.write('\n')
-
-    // Step 1: Get detailed error logs
-    process.stdout.write('⧖ Analyzing error logs...\n')
-    const errorLogs = await getFailureLogs(repositoryName, runId)
-
-    if (!errorLogs) {
-      process.stdout.write(`${chalk.yellow('✗')} Could not retrieve error logs\n`)
-      return
-    }
-
-    process.stdout.write('✓ Error logs retrieved\n')
-
-    // Step 2: Identify error type
-    const errorType = identifyErrorType(errorLogs)
-    process.stdout.write(`✓ Error type identified: ${chalk.cyan(errorType)}\n`)
-
-    // Step 3: Apply automated fixes based on error type
-    switch (errorType) {
-      case 'linting':
-        await fixLintingErrors(errorLogs)
-        break
-      case 'typescript':
-        await fixTypescriptErrors(errorLogs)
-        break
-      case 'build':
-        await fixBuildErrors(errorLogs)
-        break
-      case 'authentication':
-        process.stdout.write(`${chalk.yellow('✗')} Authentication errors require manual intervention\n`)
-        process.stdout.write('Please check your npm token or run: npm login\n')
-        break
-      default:
-        process.stdout.write(`${chalk.yellow('✗')} Unknown error type - manual intervention required\n`)
-    }
-
-    process.stdout.write('\n')
-  }
-  catch (error) {
-    process.stdout.write(`${chalk.red('✗')} Automated fixing failed: ${error instanceof Error ? error.message : String(error)}\n`)
-  }
-}
-
 async function getFailureLogs(repositoryName: string, runId: string | number): Promise<string | null> {
   try {
     const result = await execa('gh', [
@@ -1070,125 +1049,6 @@ async function getFailureLogs(repositoryName: string, runId: string | number): P
   }
   catch {
     return null
-  }
-}
-
-function identifyErrorType(errorLogs: string): string {
-  if (errorLogs.includes('eslint') || errorLogs.includes('lint')) {
-    return 'linting'
-  }
-  if (errorLogs.includes('TypeScript') || errorLogs.includes('tsc') || errorLogs.includes('TS')) {
-    return 'typescript'
-  }
-  if (errorLogs.includes('build failed') || errorLogs.includes('Build failed')) {
-    return 'build'
-  }
-  if (errorLogs.includes('401') || errorLogs.includes('authentication') || errorLogs.includes('login')) {
-    return 'authentication'
-  }
-  return 'unknown'
-}
-
-async function fixLintingErrors(errorLogs: string): Promise<void> {
-  process.stdout.write('⧖ Attempting to fix linting errors...\n')
-
-  try {
-    // Try lint:fix first
-    process.stdout.write('  ⧖ Running lint:fix...\n')
-    await execa('bun', ['run', 'lint:fix'], { stdio: 'pipe' })
-    process.stdout.write('  ✓ Lint:fix completed\n')
-
-    // Verify linting passes now
-    process.stdout.write('  ⧖ Verifying lint fixes...\n')
-    await execa('bun', ['run', 'lint'], { stdio: 'pipe' })
-    process.stdout.write('  ✓ Linting now passes\n')
-
-    // Commit fixes
-    await commitAutomatedFixes('fix: automated lint error fixes')
-  }
-  catch {
-    process.stdout.write(`  ${chalk.yellow('✗')} Lint:fix could not resolve all issues\\n`)
-    process.stdout.write('  ⧖ Attempting manual fixes for common patterns...\n')
-
-    // Try to fix common linting issues programmatically
-    await applyCommonLintFixes(errorLogs)
-  }
-}
-
-async function fixTypescriptErrors(_errorLogs: string): Promise<void> {
-  process.stdout.write('⧖ Attempting to fix TypeScript errors...\n')
-
-  try {
-    process.stdout.write('  ⧖ Running typecheck...\n')
-    await execa('bun', ['run', 'typecheck'], { stdio: 'pipe' })
-    process.stdout.write('  ✓ TypeScript errors resolved\n')
-  }
-  catch {
-    process.stdout.write(`  ${chalk.yellow('✗')} TypeScript errors require manual intervention\n`)
-    process.stdout.write('  Please fix type errors and try again\n')
-  }
-}
-
-async function fixBuildErrors(_errorLogs: string): Promise<void> {
-  process.stdout.write('⧖ Attempting to fix build errors...\n')
-
-  try {
-    process.stdout.write('  ⧖ Cleaning build directory...\n')
-    await execa('bun', ['run', 'clean'], { stdio: 'pipe' })
-
-    process.stdout.write('  ⧖ Rebuilding...\n')
-    await execa('bun', ['run', 'build'], { stdio: 'pipe' })
-
-    process.stdout.write('  ✓ Build completed successfully\n')
-    await commitAutomatedFixes('fix: automated build fixes')
-  }
-  catch {
-    process.stdout.write(`  ${chalk.yellow('✗')} Build errors require manual intervention\n`)
-  }
-}
-
-async function applyCommonLintFixes(errorLogs: string): Promise<void> {
-  const _fs = await import('node:fs/promises')
-
-  // Fix common patterns based on error logs
-  if (errorLogs.includes('no-require-imports')) {
-    process.stdout.write('  ⧖ Adding eslint-disable for require imports...\n')
-    // This would need more sophisticated AST manipulation in a real implementation
-  }
-
-  if (errorLogs.includes('no-mixed-operators')) {
-    process.stdout.write('  ⧖ Fixing mixed operators with parentheses...\n')
-    // This would need AST manipulation to add proper parentheses
-  }
-
-  if (errorLogs.includes('no-unused-vars')) {
-    process.stdout.write('  ⧖ Removing unused variables...\n')
-    // This would need AST manipulation to remove or prefix with underscore
-  }
-
-  process.stdout.write(`  ${chalk.yellow('✗')} Manual lint fixes require more sophisticated tooling\n`)
-  process.stdout.write('  Consider using: bun run lint:fix manually\n')
-}
-
-async function commitAutomatedFixes(message: string): Promise<void> {
-  try {
-    process.stdout.write('  ⧖ Committing automated fixes...\n')
-
-    // Check if there are changes to commit
-    const statusResult = await execa('git', ['status', '--porcelain'], { stdio: 'pipe' })
-    if (!statusResult.stdout.trim()) {
-      process.stdout.write('  ✓ No changes to commit\n')
-      return
-    }
-
-    await execa('git', ['add', '.'], { stdio: 'pipe' })
-    await execa('git', ['commit', '-m', message], { stdio: 'pipe' })
-
-    process.stdout.write('  ✓ Automated fixes committed\n')
-    process.stdout.write('  ⧖ Consider triggering a new release to test the fixes\n')
-  }
-  catch {
-    process.stdout.write(`  ${chalk.yellow('✗')} Could not commit changes (may be no changes or permission issue)\n`)
   }
 }
 
